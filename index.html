@@ -809,10 +809,14 @@
             if (models.length > 0) {
                 models.sort((a, b) => (a.id || a.name).localeCompare(b.id || b.name)).forEach(model => {
                     // Gemini: id/name 字段兼容
-                    const modelId = model.id || model.name;
+                    let modelId = model.id || model.name;
                     if (!modelId) return;
                     // OpenAI: 过滤 embed/vision，Gemini不过滤
                     if (apiType === 'openai' && (modelId.includes('embed') || modelId.includes('vision'))) return;
+                    // 修正：去除 models/ 前缀
+                    if (apiType === 'gemini' && modelId.startsWith('models/')) {
+                        modelId = modelId.replace('models/', '');
+                    }
                     const option = document.createElement('option');
                     option.value = modelId;
                     option.textContent = modelId;
