@@ -111,6 +111,13 @@
                     </h2>
                     <form id="api-form" class="space-y-3">
                         <div>
+                            <label for="api-type" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 类型</label>
+                            <select id="api-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
+                                <option value="openai" selected>OpenAI</option>
+                                <option value="gemini">Gemini</option>
+                            </select>
+                        </div>
+                        <div>
                             <label for="api-url" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 地址</label>
                             <input type="url" id="api-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="https://api.openai.com/v1/chat/completions">
                         </div>
@@ -371,6 +378,7 @@
     let currentPageIndex = 0;
     const mdConverter = new showdown.Converter({ noHeaderId: true, simplifiedAutoLink: true, openLinksInNewWindow: true });
     let apiConfig = {
+      type: 'openai', // 'openai' or 'gemini'
       url: 'https://api.openai.com/v1/chat/completions',
       key: '',
       isConnected: false,
@@ -383,6 +391,7 @@
       tabBtnPreset: document.getElementById('tab-btn-preset'),
       tabContentConfig: document.getElementById('tab-content-config'),
       tabContentPreset: document.getElementById('tab-content-preset'),
+      apiType: document.getElementById('api-type'),
       apiUrl: document.getElementById('api-url'),
       apiKey: document.getElementById('api-key'),
       toggleKeyBtn: document.getElementById('toggle-key'),
@@ -439,7 +448,7 @@
         const state = {
             story,
             currentChapterIndex,
-            apiConfig: { url: elements.apiUrl.value, key: elements.apiKey.value },
+            apiConfig: { type: elements.apiType.value, url: elements.apiUrl.value, key: elements.apiKey.value },
             settings: {
                 model: elements.modelSelect.value,
                 contextMemory: elements.contextMemorySlider.value,
@@ -469,6 +478,7 @@
             currentChapterIndex = state.currentChapterIndex || 0;
 
             if (state.apiConfig) {
+                elements.apiType.value = state.apiConfig.type || 'openai';
                 elements.apiUrl.value = state.apiConfig.url || 'https://api.openai.com/v1/chat/completions';
                 elements.apiKey.value = state.apiConfig.key || '';
             }
@@ -687,42 +697,62 @@
             const contextMemory = parseInt(elements.contextMemorySlider.value, 10);
             const storyPreset = elements.presetText.value;
             const formatInstructions = elements.formatPrompt.value;
-            
-            const systemPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}`;
-            
-            let messages = [{ role: 'system', content: systemPrompt }];
-            
-            // For regeneration, context should not include the current chapter
-            const storyForContext = isRegeneration ? story.slice(0, currentChapterIndex) : story;
-            if (contextMemory > 0 && storyForContext.length > 0) {
-              const startIndex = Math.max(0, storyForContext.length - contextMemory);
-              const contextChapters = storyForContext.slice(startIndex);
-              
-              let contextPrompt = "这是故事的背景和之前的章节内容，请在此基础上继续：\n\n";
-              contextChapters.forEach(chap => {
-                  contextPrompt += `# ${chap.title}\n${chap.content}\n\n`;
-              });
-              messages.push({ role: 'user', content: contextPrompt });
-              messages.push({ role: 'assistant', content: "好的，已了解背景和之前的章节。请告诉我接下来要创作什么。"});
+            const apiType = elements.apiType.value;
+            const modelId = elements.modelSelect.value;
+            let systemPrompt, messages, payload, endpoint, headers;
+            if (apiType === 'openai') {
+                systemPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}`;
+                messages = [{ role: 'system', content: systemPrompt }];
+                const storyForContext = isRegeneration ? story.slice(0, currentChapterIndex) : story;
+                if (contextMemory > 0 && storyForContext.length > 0) {
+                  const startIndex = Math.max(0, storyForContext.length - contextMemory);
+                  const contextChapters = storyForContext.slice(startIndex);
+                  let contextPrompt = "这是故事的背景和之前的章节内容，请在此基础上继续：\n\n";
+                  contextChapters.forEach(chap => {
+                      contextPrompt += `# ${chap.title}\n${chap.content}\n\n`;
+                  });
+                  messages.push({ role: 'user', content: contextPrompt });
+                  messages.push({ role: 'assistant', content: "好的，已了解背景和之前的章节。请告诉我接下来要创作什么。" });
+                }
+                messages.push({ role: 'user', content: `### 当前任务\n${prompt}` });
+                payload = {
+                    model: modelId,
+                    messages: messages,
+                    temperature: parseFloat(elements.temperatureSlider.value),
+                };
+                endpoint = apiConfig.url;
+                headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.key}` };
+            } else if (apiType === 'gemini') {
+                // Gemini: 只支持 user role，内容在 parts 里
+                let contextText = '';
+                const storyForContext = isRegeneration ? story.slice(0, currentChapterIndex) : story;
+                if (contextMemory > 0 && storyForContext.length > 0) {
+                  const startIndex = Math.max(0, storyForContext.length - contextMemory);
+                  const contextChapters = storyForContext.slice(startIndex);
+                  contextText += "这是故事的背景和之前的章节内容，请在此基础上继续：\n\n";
+                  contextChapters.forEach(chap => {
+                      contextText += `# ${chap.title}\n${chap.content}\n\n`;
+                  });
+                }
+                const fullPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}\n\n${contextText}\n### 当前任务\n${prompt}`;
+                payload = {
+                    contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+                };
+                endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiConfig.key}`;
+                headers = { 'Content-Type': 'application/json' };
             }
-
-            messages.push({ role: 'user', content: `### 当前任务\n${prompt}`});
-            
-            const payload = {
-                model: elements.modelSelect.value,
-                messages: messages,
-                temperature: parseFloat(elements.temperatureSlider.value),
-            };
-
-            const data = await fetchFromApi(apiConfig.url, {
+            const data = await fetchFromApi(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.key}` },
+                headers: headers,
                 body: JSON.stringify(payload)
             });
-
-            const newContent = data.choices[0]?.message?.content?.trim();
+            let newContent;
+            if (apiType === 'openai') {
+                newContent = data.choices[0]?.message?.content?.trim();
+            } else if (apiType === 'gemini') {
+                newContent = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            }
             if (!newContent) throw new Error('API返回的内容为空。');
-            
             if (isRegeneration) {
                 story[currentChapterIndex].content = newContent;
                 if (!story[currentChapterIndex].title.startsWith("第")) {
@@ -744,6 +774,7 @@
     
     // --- EVENT LISTENERS ---
     elements.connectApiBtn.addEventListener('click', async () => {
+        const apiType = elements.apiType.value;
         const urlInput = elements.apiUrl.value.trim();
         const keyInput = elements.apiKey.value.trim();
         if (!urlInput || !keyInput) {
@@ -751,8 +782,14 @@
             return;
         }
         let baseUrl = urlInput.replace(/\/+$/, '').replace(/\/v1\/.*$/, '');
-        const modelsUrl = `${baseUrl}/v1/models`;
-        const completionsUrl = `${baseUrl}/v1/chat/completions`;
+        let modelsUrl, completionsUrl;
+        if (apiType === 'openai') {
+            modelsUrl = `${baseUrl}/v1/models`;
+            completionsUrl = `${baseUrl}/v1/chat/completions`;
+        } else if (apiType === 'gemini') {
+            modelsUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${keyInput}`;
+            completionsUrl = null; // Gemini每次用不同的endpoint
+        }
 
         elements.connectApiBtn.disabled = true;
         elements.connectApiBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>连接中...';
@@ -760,26 +797,33 @@
         elements.apiStatus.textContent = '';
         
         try {
-            const data = await fetchFromApi(modelsUrl, { headers: { 'Authorization': `Bearer ${keyInput}` } });
-            const models = data.data || [];
+            let data, models;
+            if (apiType === 'openai') {
+                data = await fetchFromApi(modelsUrl, { headers: { 'Authorization': `Bearer ${keyInput}` } });
+                models = data.data || [];
+            } else if (apiType === 'gemini') {
+                data = await fetchFromApi(modelsUrl, {});
+                models = data.models || [];
+            }
             elements.modelSelect.innerHTML = '';
             if (models.length > 0) {
-                models.sort((a, b) => a.id.localeCompare(b.id)).forEach(model => {
-                    // A simple filter for chat-completion models
-                    if (!model.id.includes('embed') && !model.id.includes('vision')) {
-                      const option = document.createElement('option');
-                      option.value = model.id;
-                      option.textContent = model.id;
-                      elements.modelSelect.appendChild(option);
-                    }
+                models.sort((a, b) => (a.id || a.name).localeCompare(b.id || b.name)).forEach(model => {
+                    // Gemini: id/name 字段兼容
+                    const modelId = model.id || model.name;
+                    if (!modelId) return;
+                    // OpenAI: 过滤 embed/vision，Gemini不过滤
+                    if (apiType === 'openai' && (modelId.includes('embed') || modelId.includes('vision'))) return;
+                    const option = document.createElement('option');
+                    option.value = modelId;
+                    option.textContent = modelId;
+                    elements.modelSelect.appendChild(option);
                 });
                 const lastModel = localStorage.getItem('aiReader_lastModel');
                 if (lastModel && elements.modelSelect.querySelector(`option[value="${lastModel}"]`)) {
                     elements.modelSelect.value = lastModel;
                 }
-
                 elements.modelSelect.disabled = false;
-                apiConfig = { url: completionsUrl, key: keyInput, isConnected: true };
+                apiConfig = { type: apiType, url: completionsUrl || urlInput, key: keyInput, isConnected: true };
                 elements.apiStatus.textContent = `连接成功！已加载 ${elements.modelSelect.options.length} 个可用模型。`;
                 elements.apiStatus.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-300');
                 elements.connectApiBtn.innerHTML = '<i class="fa fa-check mr-2"></i>已连接';
