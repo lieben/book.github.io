@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>阅读器 (增强版 v2.1)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class', // <-- 启用 Dark Mode
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#111827', // 更深的背景
+            light: '#F8FAFC',
+            'slate-800': '#1E293B',
+            'slate-700': '#334155',
+            'slate-600': '#475569',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            reading: ['var(--reading-font)', 'Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      :root {
+        --reading-font: 'Inter';
+        --reading-font-size: 1.125rem; /* 18px */
+        --reading-line-height: 1.75;
+        --reading-letter-spacing: 0.025em;
+        --reading-bg-color: #ffffff;
+        --reading-text-color: #334155; /* slate-700 */
+        --dialogue-highlight-color: #334155;
+        --dialogue-highlight-weight: normal;
+      }
+      /* Dark mode variables */
+      :root.dark {
+        --reading-bg-color: #1E293B; /* slate-800 */
+        --reading-text-color: #cbd5e1; /* slate-300 */
+        --dialogue-highlight-color: #cbd5e1; /* slate-300 */
+      }
+    }
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .tab-button.active {
+        @apply bg-primary/10 text-primary border-primary dark:bg-primary/20;
+      }
+      .dialogue-highlight {
+        color: var(--dialogue-highlight-color);
+        font-weight: var(--dialogue-highlight-weight);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col dark:bg-dark dark:text-light">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-800 dark:border-b dark:border-slate-700">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-primary flex items-center">
+        <i class="fa fa-book mr-2"></i>阅读器
+      </h1>
+      <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom">
+        <i class="fa fa-moon-o text-gray-600 dark:text-gray-300"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+    <!-- 左侧控制面板 -->
+    <aside class="lg:w-1/3 space-y-6">
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-xl shadow-sm p-2 flex space-x-2 dark:bg-slate-800">
+            <button id="tab-btn-config" class="tab-button flex-1 py-2 px-4 rounded-lg text-sm font-semibold border-2 border-transparent transition-custom active dark:text-gray-300">
+                <i class="fa fa-cogs mr-2"></i>模型设置
+            </button>
+            <button id="tab-btn-preset" class="tab-button flex-1 py-2 px-4 rounded-lg text-sm font-semibold border-2 border-transparent transition-custom dark:text-gray-300">
+                <i class="fa fa-file-text-o mr-2"></i>故事设定
+            </button>
+        </div>
+
+        <!-- Tab Content: Model Config -->
+        <div id="tab-content-config">
+            <div class="bg-white rounded-xl shadow-sm p-5 transition-custom hover:shadow-md space-y-6 dark:bg-slate-800">
+                <!-- API 配置面板 -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                        <i class="fa fa-plug mr-2"></i>API 配置
+                    </h2>
+                    <form id="api-form" class="space-y-3">
+                        <div>
+                            <label for="api-url" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 地址</label>
+                            <input type="url" id="api-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="https://api.openai.com/v1/chat/completions">
+                        </div>
+                        <div>
+                            <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API Key</label>
+                            <div class="relative">
+                                <input type="password" id="api-key" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <button type="button" id="toggle-key" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" id="connect-api" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-custom flex items-center justify-center disabled:opacity-75 disabled:cursor-wait">
+                            <i class="fa fa-connectdevelop mr-2"></i>连接模型
+                        </button>
+                        <div id="api-status" class="hidden text-sm py-2 px-3 rounded-md"></div>
+                    </form>
+                </div>
+                <!-- 模型与参数设置 -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                      <i class="fa fa-sliders mr-2"></i>生成参数
+                    </h2>
+                    <div class="space-y-3">
+                      <div>
+                        <label for="model-select" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">选择模型</label>
+                        <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light" disabled>
+                          <option value="">请先连接API</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label for="context-memory" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">上下文记忆 (最近章节数)</label>
+                        <div class="flex items-center">
+                          <input type="range" id="context-memory" min="0" max="50" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+                          <span id="memory-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">3章</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">创意温度</label>
+                        <div class="flex items-center">
+                          <input type="range" id="temperature" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+                          <span id="temperature-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">0.7</span>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Tab Content: Story Preset -->
+        <div id="tab-content-preset" class="hidden">
+            <div class="bg-white rounded-xl shadow-sm p-5 transition-custom hover:shadow-md space-y-6 dark:bg-slate-800">
+                <!-- 故事预设 -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                        <i class="fa fa-file-text-o mr-2"></i>故事预设
+                    </h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">导入预设 (TXT)</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label for="preset-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:bg-slate-700 transition-custom">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fa fa-cloud-upload text-2xl text-gray-400 mb-2"></i>
+                                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">点击上传</span> 或拖放文件</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">支持 .txt 格式</p>
+                                    </div>
+                                    <input id="preset-upload" type="file" class="hidden" accept=".txt">
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="preset-text" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">预设内容</label>
+                            <textarea id="preset-text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-40 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="输入故事背景、角色设定等预设内容...">### 故事设定
+- 世界观：架空魔法世界，存在四个元素王国
+- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿
+- 目标：寻找失落的元素之书，阻止黑暗势力崛起</textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- 输出格式 -->
+                <div>
+                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                        <i class="fa fa-code mr-2"></i>输出格式要求
+                    </h2>
+                    <div class="space-y-3">
+                        <label for="output-format" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">内容格式</label>
+                        <select id="output-format" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
+                            <option value="text">纯文本</option>
+                            <option value="markdown" selected>Markdown</option>
+                            <option value="html">HTML</option>
+                        </select>
+                         <textarea id="format-prompt" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-24 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="可以添加额外的格式要求，例如：请总是以旁白开始，用对话推动剧情。">请使用 Markdown 格式，章节标题使用 H1，段落清晰。</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 右侧阅读与控制区域 -->
+    <div class="lg:w-2/3 flex flex-col">
+      <!-- 生成控制栏 -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-3 justify-between items-center transition-custom hover:shadow-md dark:bg-slate-800">
+        <div class="flex items-center space-x-2">
+          <button id="prev-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600" disabled>
+            <i class="fa fa-arrow-left mr-2"></i>上一章
+          </button>
+          <span id="chapter-info" class="text-sm text-gray-500 px-2 dark:text-gray-400">第 1 / 1 章</span>
+          <button id="next-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600">
+            下一章 <i class="fa fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+        <div class="flex space-x-2 flex-wrap gap-2">
+          <button id="custom-prompt-btn" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
+            <i class="fa fa-magic mr-2"></i>自定义生成
+          </button>
+          <button id="continue-story" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom flex items-center">
+            <i class="fa fa-play mr-2"></i>继续生成
+          </button>
+          <button id="regenerate-chapter" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-custom flex items-center">
+            <i class="fa fa-refresh mr-2"></i>重新生成
+          </button>
+        </div>
+      </div>
+
+      <!-- 阅读区域 -->
+      <div id="reading-area-wrapper" class="bg-white rounded-xl shadow-sm overflow-hidden flex-grow transition-custom hover:shadow-md flex flex-col" style="background-color: var(--reading-bg-color);">
+        <div id="reading-area" class="p-8 md:p-10 lg:p-12 min-h-[500px] relative flex-grow overflow-y-auto scrollbar-hide" style="color: var(--reading-text-color); font-family: var(--reading-font); font-size: var(--reading-font-size); line-height: var(--reading-line-height); letter-spacing: var(--reading-letter-spacing);">
+          <!-- 加载状态 -->
+          <div id="loading-state" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 z-10 hidden">
+            <div class="text-center">
+              <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+              <p class="text-gray-600 dark:text-gray-300">AI正在奋笔疾书...请稍候</p>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div id="content-area-container">
+            <h1 id="chapter-title-display" class="text-3xl md:text-4xl font-bold mb-6 text-center" style="color: var(--reading-text-color);"></h1>
+            <div id="content-area" class="prose max-w-none">
+              <!-- Paginated content will be loaded by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部工具栏 -->
+        <div class="bg-gray-50/50 border-t border-gray-200/80 p-4 flex flex-wrap justify-between items-center backdrop-blur-sm dark:bg-slate-800/80 dark:border-t-slate-700">
+          <div class="flex items-center space-x-4 mb-2 md:mb-0">
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+              <i class="fa fa-file-word-o mr-1"></i>字数: <span id="word-count">0</span>
+            </div>
+            <!-- Pagination Controls -->
+            <div id="pagination-controls" class="flex items-center space-x-2 hidden">
+                <button id="prev-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="上一页">
+                    <i class="fa fa-chevron-left text-gray-600 dark:text-gray-300"></i>
+                </button>
+                <span id="page-info" class="text-xs text-gray-500 dark:text-gray-400 px-1"></span>
+                <button id="next-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="下一页">
+                    <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300"></i>
+                </button>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <button id="open-settings" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="阅读设置">
+              <i class="fa fa-sliders text-gray-600 dark:text-gray-300"></i>
+            </button>
+            <button id="export-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出本章 (TXT)">
+              <i class="fa fa-download text-gray-600 dark:text-gray-300"></i>
+            </button>
+            <button id="export-all-chapters" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出全部故事 (TXT)">
+              <i class="fa fa-save text-gray-600 dark:text-gray-300"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 阅读设置模态框 -->
+  <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col dark:bg-slate-800">
+      <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+        <h3 class="text-lg font-semibold text-primary">阅读设置</h3>
+        <button id="close-settings" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+          <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <!-- 字体设置 -->
+        <div>
+          <h4 class="text-md font-medium text-gray-700 mb-3 dark:text-gray-300"><i class="fa fa-font mr-2 text-primary"></i>字体样式</h4>
+          <div class="space-y-4">
+              <div>
+                  <label for="font-size-slider" class="block text-sm font-medium text-gray-600 mb-1 dark:text-gray-400">字体大小: <span id="font-size-value">18px</span></label>
+                  <input type="range" id="font-size-slider" min="12" max="32" step="1" value="18" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+              </div>
+              <div>
+                  <label for="line-height-slider" class="block text-sm font-medium text-gray-600 mb-1 dark:text-gray-400">行间距: <span id="line-height-value">1.75</span></label>
+                  <input type="range" id="line-height-slider" min="1.2" max="2.5" step="0.05" value="1.75" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+              </div>
+              <div>
+                  <label for="letter-spacing-slider" class="block text-sm font-medium text-gray-600 mb-1 dark:text-gray-400">字间距: <span id="letter-spacing-value">0.025em</span></label>
+                  <input type="range" id="letter-spacing-slider" min="0" max="0.1" step="0.005" value="0.025" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+              </div>
+          </div>
+        </div>
+        <!-- 自定义字体 -->
+        <div>
+          <h4 class="text-md font-medium text-gray-700 mb-3 dark:text-gray-300"><i class="fa fa-upload mr-2 text-primary"></i>自定义字体</h4>
+          <input type="file" id="font-upload" accept=".ttf,.otf,.woff,.woff2" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer dark:text-gray-400 dark:file:bg-primary/20 dark:hover:file:bg-primary/30">
+          <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">上传 .ttf 或 .otf 格式字体文件，仅在阅读区生效。</p>
+        </div>
+        <!-- 对话高亮 -->
+        <div>
+          <h4 class="text-md font-medium text-gray-700 mb-3 dark:text-gray-300"><i class="fa fa-comments-o mr-2 text-primary"></i>对话高亮</h4>
+          <div class="space-y-3">
+              <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" id="dialogue-bold-toggle" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:bg-slate-700 dark:border-slate-600">
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">对话内容加粗</span>
+              </label>
+              <div class="flex items-center space-x-3">
+                  <label for="dialogue-color-picker" class="text-sm font-medium text-gray-700 dark:text-gray-300">对话文字颜色:</label>
+                  <input type="color" id="dialogue-color-picker" value="#334155" class="w-10 h-8 p-1 border border-gray-300 rounded-md cursor-pointer dark:bg-slate-700 dark:border-slate-600">
+                  <button id="reset-dialogue-color" class="text-xs text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary">重置</button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">注意：对话高亮在“HTML”输出格式下无效。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义生成模态框 -->
+  <div id="custom-prompt-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-lg dark:bg-slate-800">
+          <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-primary">自定义生成</h3>
+              <button id="close-custom-prompt" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+                  <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+              </button>
+          </div>
+          <div class="p-6">
+              <textarea id="custom-prompt-input" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-40 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="请输入你希望接下来发生的情节..."></textarea>
+              <div class="mt-4 flex justify-end">
+                  <button id="submit-custom-prompt" class="px-6 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom">生成</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
+  <script>
+    // --- START: FULLY FUNCTIONAL JAVASCRIPT CODE ---
+    document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE MANAGEMENT ---
+    let story = [];
+    let currentChapterIndex = 0;
+    let chapterPages = [];
+    let currentPageIndex = 0;
+    const mdConverter = new showdown.Converter({ noHeaderId: true, simplifiedAutoLink: true, openLinksInNewWindow: true });
+    let apiConfig = {
+      url: 'https://api.openai.com/v1/chat/completions',
+      key: '',
+      isConnected: false,
+    };
+
+    // --- DOM ELEMENTS ---
+    const elements = {
+      themeToggle: document.getElementById('theme-toggle'),
+      tabBtnConfig: document.getElementById('tab-btn-config'),
+      tabBtnPreset: document.getElementById('tab-btn-preset'),
+      tabContentConfig: document.getElementById('tab-content-config'),
+      tabContentPreset: document.getElementById('tab-content-preset'),
+      apiUrl: document.getElementById('api-url'),
+      apiKey: document.getElementById('api-key'),
+      toggleKeyBtn: document.getElementById('toggle-key'),
+      connectApiBtn: document.getElementById('connect-api'),
+      apiStatus: document.getElementById('api-status'),
+      modelSelect: document.getElementById('model-select'),
+      contextMemorySlider: document.getElementById('context-memory'),
+      memoryValue: document.getElementById('memory-value'),
+      temperatureSlider: document.getElementById('temperature'),
+      temperatureValue: document.getElementById('temperature-value'),
+      presetUpload: document.getElementById('preset-upload'),
+      presetText: document.getElementById('preset-text'),
+      outputFormat: document.getElementById('output-format'),
+      formatPrompt: document.getElementById('format-prompt'),
+      loadingState: document.getElementById('loading-state'),
+      chapterTitleDisplay: document.getElementById('chapter-title-display'),
+      contentArea: document.getElementById('content-area'),
+      contentAreaContainer: document.getElementById('content-area-container'),
+      readingArea: document.getElementById('reading-area'),
+      wordCount: document.getElementById('word-count'),
+      chapterInfo: document.getElementById('chapter-info'),
+      paginationControls: document.getElementById('pagination-controls'),
+      prevPageBtn: document.getElementById('prev-page'),
+      nextPageBtn: document.getElementById('next-page'),
+      pageInfo: document.getElementById('page-info'),
+      prevChapterBtn: document.getElementById('prev-chapter'),
+      nextChapterBtn: document.getElementById('next-chapter'),
+      customPromptBtn: document.getElementById('custom-prompt-btn'),
+      continueStoryBtn: document.getElementById('continue-story'),
+      regenerateChapterBtn: document.getElementById('regenerate-chapter'),
+      openSettingsBtn: document.getElementById('open-settings'),
+      exportChapterBtn: document.getElementById('export-chapter'),
+      exportAllChaptersBtn: document.getElementById('export-all-chapters'),
+      settingsModal: document.getElementById('settings-modal'),
+      closeSettingsBtn: document.getElementById('close-settings'),
+      fontSizeSlider: document.getElementById('font-size-slider'),
+      fontSizeValue: document.getElementById('font-size-value'),
+      lineHeightSlider: document.getElementById('line-height-slider'),
+      lineHeightValue: document.getElementById('line-height-value'),
+      letterSpacingSlider: document.getElementById('letter-spacing-slider'),
+      letterSpacingValue: document.getElementById('letter-spacing-value'),
+      fontUpload: document.getElementById('font-upload'),
+      dialogueBoldToggle: document.getElementById('dialogue-bold-toggle'),
+      dialogueColorPicker: document.getElementById('dialogue-color-picker'),
+      resetDialogueColorBtn: document.getElementById('reset-dialogue-color'),
+      customPromptModal: document.getElementById('custom-prompt-modal'),
+      closeCustomPromptBtn: document.getElementById('close-custom-prompt'),
+      customPromptInput: document.getElementById('custom-prompt-input'),
+      submitCustomPromptBtn: document.getElementById('submit-custom-prompt'),
+    };
+    
+    // --- NEW: STATE PERSISTENCE FUNCTIONS ---
+    const saveState = () => {
+        const state = {
+            story,
+            currentChapterIndex,
+            apiConfig: { url: elements.apiUrl.value, key: elements.apiKey.value },
+            settings: {
+                model: elements.modelSelect.value,
+                contextMemory: elements.contextMemorySlider.value,
+                temperature: elements.temperatureSlider.value,
+                presetText: elements.presetText.value,
+                outputFormat: elements.outputFormat.value,
+                formatPrompt: elements.formatPrompt.value,
+                reading: {
+                    fontSize: elements.fontSizeSlider.value,
+                    lineHeight: elements.lineHeightSlider.value,
+                    letterSpacing: elements.letterSpacingSlider.value,
+                    dialogueBold: elements.dialogueBoldToggle.checked,
+                    dialogueColor: elements.dialogueColorPicker.value,
+                }
+            }
+        };
+        localStorage.setItem('aiReaderState_v2', JSON.stringify(state));
+    };
+
+    const loadState = () => {
+        const savedState = localStorage.getItem('aiReaderState_v2');
+        if (!savedState) return;
+
+        try {
+            const state = JSON.parse(savedState);
+            story = state.story || [];
+            currentChapterIndex = state.currentChapterIndex || 0;
+
+            if (state.apiConfig) {
+                elements.apiUrl.value = state.apiConfig.url || 'https://api.openai.com/v1/chat/completions';
+                elements.apiKey.value = state.apiConfig.key || '';
+            }
+
+            if (state.settings) {
+                const s = state.settings;
+                // We don't restore the model directly, as it needs API connection first.
+                // We save the preference and apply it after connection.
+                if (s.model) localStorage.setItem('aiReader_lastModel', s.model);
+
+                elements.contextMemorySlider.value = s.contextMemory || 3;
+                elements.memoryValue.textContent = `${s.contextMemory || 3}章`;
+
+                elements.temperatureSlider.value = s.temperature || 0.7;
+                elements.temperatureValue.textContent = parseFloat(s.temperature || 0.7).toFixed(1);
+                
+                elements.presetText.value = s.presetText || `### 故事设定\n- 世界观：架空魔法世界，存在四个元素王国\n- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿\n- 目标：寻找失落的元素之书，阻止黑暗势力崛起`;
+                elements.outputFormat.value = s.outputFormat || 'markdown';
+                elements.formatPrompt.value = s.formatPrompt || '请使用 Markdown 格式，章节标题使用 H1，段落清晰。';
+                
+                if(s.reading) {
+                    const r = s.reading;
+                    elements.fontSizeSlider.value = r.fontSize || 18;
+                    elements.lineHeightSlider.value = r.lineHeight || 1.75;
+                    elements.letterSpacingSlider.value = r.letterSpacing || 0.025;
+                    elements.dialogueBoldToggle.checked = r.dialogueBold || false;
+                    elements.dialogueColorPicker.value = r.dialogueColor || '#334155';
+                    applyReadingSettings(); // Apply loaded settings to the page
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load state from localStorage:", error);
+            localStorage.removeItem('aiReaderState_v2'); // Clear corrupted state
+        }
+    };
+    
+    // Helper to apply reading settings from sliders/inputs
+    const applyReadingSettings = () => {
+        const root = document.documentElement;
+        const size = `${elements.fontSizeSlider.value}px`;
+        root.style.setProperty('--reading-font-size', size);
+        elements.fontSizeValue.textContent = size;
+
+        const height = elements.lineHeightSlider.value;
+        root.style.setProperty('--reading-line-height', height);
+        elements.lineHeightValue.textContent = height;
+        
+        const spacing = `${elements.letterSpacingSlider.value}em`;
+        root.style.setProperty('--reading-letter-spacing', spacing);
+        elements.letterSpacingValue.textContent = spacing;
+
+        root.style.setProperty('--dialogue-highlight-weight', elements.dialogueBoldToggle.checked ? 'bold' : 'normal');
+        
+        const defaultColor = getComputedStyle(root).getPropertyValue(
+            document.documentElement.classList.contains('dark') ? '--reading-text-color' : '--reading-text-color'
+        ).trim();
+        const chosenColor = elements.dialogueColorPicker.value;
+        // Only set dialogue color if it's different from the default text color to avoid overriding everything
+        root.style.setProperty('--dialogue-highlight-color', chosenColor);
+    };
+
+    // --- RENDER & UPDATE FUNCTIONS ---
+    const highlightDialogue = (text) => {
+      if (!text) return '';
+      const dialogueRegex = /(“[^”]+”|‘[^’]+’|"[^"]+"|\'[^\']+\'|「[^」]+」|『[^』]+』)/g;
+      return text.replace(dialogueRegex, (match) => `<span class="dialogue-highlight">${match}</span>`);
+    };
+    
+    const escapeHtml = (unsafe) => {
+        if (!unsafe) return '';
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    const paginateChapterContent = (fullHtmlContent, limit = 1500) => {
+      if (!fullHtmlContent || fullHtmlContent.trim() === '') return [''];
+      const pages = [];
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = fullHtmlContent;
+      const nodes = Array.from(tempDiv.childNodes);
+      if (nodes.length === 0) return [fullHtmlContent];
+      let currentPageHtml = '';
+      let currentPageCharCount = 0;
+      for (const node of nodes) {
+          const nodeText = node.textContent || "";
+          const nodeHtml = node.outerHTML || nodeText;
+          if (currentPageHtml !== '' && currentPageCharCount + nodeText.length > limit) {
+              pages.push(currentPageHtml);
+              currentPageHtml = nodeHtml;
+              currentPageCharCount = nodeText.length;
+          } else {
+              currentPageHtml += nodeHtml;
+              currentPageCharCount += nodeText.length;
+          }
+      }
+      if (currentPageHtml !== '') pages.push(currentPageHtml);
+      return pages.length > 0 ? pages : [''];
+    };
+
+    const renderCurrentPage = () => {
+        if (chapterPages.length === 0) return;
+        elements.contentArea.innerHTML = chapterPages[currentPageIndex];
+        updatePaginationNav();
+    };
+
+    const renderChapter = (index) => {
+      if (index < 0 || index >= story.length) return;
+      elements.contentAreaContainer.classList.remove('hidden');
+      currentChapterIndex = index;
+      const chapter = story[index];
+      const outputFormat = elements.outputFormat.value;
+      let contentHtml;
+      if (outputFormat === 'markdown') {
+          contentHtml = mdConverter.makeHtml(chapter.content);
+          contentHtml = highlightDialogue(contentHtml);
+      } else if (outputFormat === 'html') {
+          contentHtml = chapter.content; // No dialogue highlighting for HTML
+      } else { // text
+          let safeText = escapeHtml(chapter.content);
+          safeText = highlightDialogue(safeText);
+          contentHtml = safeText.replace(/\n/g, '<br>');
+      }
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = contentHtml;
+      const h1 = tempDiv.querySelector('h1');
+      if (h1) {
+          chapter.title = h1.textContent;
+          h1.remove();
+          contentHtml = tempDiv.innerHTML;
+      }
+      elements.chapterTitleDisplay.textContent = chapter.title;
+      // Increased character limit for pagination
+      chapterPages = paginateChapterContent(contentHtml, 2500); 
+      currentPageIndex = 0;
+      renderCurrentPage();
+      updateWordCount();
+      updateChapterNav();
+      elements.readingArea.scrollTop = 0;
+      saveState();
+    };
+
+    const updateWordCount = () => {
+        if (story.length === 0 || !story[currentChapterIndex]) {
+            elements.wordCount.textContent = '0';
+            return;
+        }
+        const fullText = story[currentChapterIndex].content || '';
+        const matches = fullText.match(/[\u4e00-\u9fa5a-zA-Z0-9]+/g);
+        elements.wordCount.textContent = matches ? matches.join('').length : 0;
+    };
+
+    const updateChapterNav = () => {
+      const hasStory = story.length > 0;
+      elements.chapterInfo.textContent = hasStory ? `第 ${currentChapterIndex + 1} / ${story.length} 章` : '无内容';
+      elements.prevChapterBtn.disabled = !hasStory || currentChapterIndex === 0;
+      elements.nextChapterBtn.disabled = !hasStory || currentChapterIndex === story.length - 1;
+      elements.regenerateChapterBtn.disabled = !hasStory;
+      elements.exportChapterBtn.disabled = !hasStory;
+      elements.exportAllChaptersBtn.disabled = !hasStory;
+    };
+
+    const updatePaginationNav = () => {
+      if (chapterPages.length > 1) {
+          elements.paginationControls.classList.remove('hidden');
+          elements.pageInfo.textContent = `第 ${currentPageIndex + 1} / ${chapterPages.length} 页`;
+          elements.prevPageBtn.disabled = currentPageIndex === 0;
+          elements.nextPageBtn.disabled = currentPageIndex === chapterPages.length - 1;
+      } else {
+          elements.paginationControls.classList.add('hidden');
+      }
+    };
+
+    const showLoading = (isLoading) => {
+        elements.loadingState.classList.toggle('hidden', !isLoading);
+    };
+    
+    // --- NEW: WELCOME MESSAGE FUNCTION ---
+    const renderWelcomeMessage = () => {
+        elements.contentAreaContainer.classList.add('hidden');
+        const existingWelcome = document.getElementById('welcome-message');
+        if (existingWelcome) existingWelcome.remove();
+        elements.readingArea.innerHTML += `
+            <div id="welcome-message" class="text-center p-10 flex flex-col items-center justify-center h-full">
+                <i class="fa fa-book text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">欢迎使用 AI 阅读器</h2>
+                <p class="text-gray-500 dark:text-gray-400 max-w-md">
+                    请先在左侧 "模型设置" 中配置您的 API，然后点击 "继续生成" 或 "自定义生成" 来开始您的故事创作之旅。
+                </p>
+            </div>
+        `;
+        updateWordCount();
+        updateChapterNav();
+        updatePaginationNav();
+    };
+
+    // --- API & GENERATION LOGIC ---
+    async function fetchFromApi(endpoint, options) {
+        const response = await fetch(endpoint, options);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData?.error?.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+        return response.json();
+    }
+
+    async function generateChapter(prompt, isRegeneration = false) {
+        if (!apiConfig.isConnected || !elements.modelSelect.value) {
+            alert('请先成功连接API并选择一个模型！');
+            return;
+        }
+        showLoading(true);
+        const welcomeMsg = document.getElementById('welcome-message');
+        if (welcomeMsg) welcomeMsg.remove();
+
+        try {
+            const contextMemory = parseInt(elements.contextMemorySlider.value, 10);
+            const storyPreset = elements.presetText.value;
+            const formatInstructions = elements.formatPrompt.value;
+            
+            const systemPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}`;
+            
+            let messages = [{ role: 'system', content: systemPrompt }];
+            
+            // For regeneration, context should not include the current chapter
+            const storyForContext = isRegeneration ? story.slice(0, currentChapterIndex) : story;
+            if (contextMemory > 0 && storyForContext.length > 0) {
+              const startIndex = Math.max(0, storyForContext.length - contextMemory);
+              const contextChapters = storyForContext.slice(startIndex);
+              
+              let contextPrompt = "这是故事的背景和之前的章节内容，请在此基础上继续：\n\n";
+              contextChapters.forEach(chap => {
+                  contextPrompt += `# ${chap.title}\n${chap.content}\n\n`;
+              });
+              messages.push({ role: 'user', content: contextPrompt });
+              messages.push({ role: 'assistant', content: "好的，已了解背景和之前的章节。请告诉我接下来要创作什么。"});
+            }
+
+            messages.push({ role: 'user', content: `### 当前任务\n${prompt}`});
+            
+            const payload = {
+                model: elements.modelSelect.value,
+                messages: messages,
+                temperature: parseFloat(elements.temperatureSlider.value),
+            };
+
+            const data = await fetchFromApi(apiConfig.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiConfig.key}` },
+                body: JSON.stringify(payload)
+            });
+
+            const newContent = data.choices[0]?.message?.content?.trim();
+            if (!newContent) throw new Error('API返回的内容为空。');
+            
+            if (isRegeneration) {
+                story[currentChapterIndex].content = newContent;
+                if (!story[currentChapterIndex].title.startsWith("第")) {
+                    story[currentChapterIndex].title = `第 ${currentChapterIndex + 1} 章`;
+                }
+                renderChapter(currentChapterIndex);
+            } else {
+                story.push({ title: `第 ${story.length + 1} 章`, content: newContent });
+                renderChapter(story.length - 1);
+            }
+            // `renderChapter` already calls saveState
+        } catch (error) {
+            console.error('生成失败:', error);
+            alert(`生成内容时出错：${error.message}`);
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    // --- EVENT LISTENERS ---
+    elements.connectApiBtn.addEventListener('click', async () => {
+        const urlInput = elements.apiUrl.value.trim();
+        const keyInput = elements.apiKey.value.trim();
+        if (!urlInput || !keyInput) {
+            alert('请输入API地址和API Key。');
+            return;
+        }
+        let baseUrl = urlInput.replace(/\/+$/, '').replace(/\/v1\/.*$/, '');
+        const modelsUrl = `${baseUrl}/v1/models`;
+        const completionsUrl = `${baseUrl}/v1/chat/completions`;
+
+        elements.connectApiBtn.disabled = true;
+        elements.connectApiBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>连接中...';
+        elements.apiStatus.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'dark:bg-green-900/50', 'dark:text-green-300', 'dark:bg-red-900/50', 'dark:text-red-300', 'bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900/50', 'dark:text-yellow-300');
+        elements.apiStatus.textContent = '';
+        
+        try {
+            const data = await fetchFromApi(modelsUrl, { headers: { 'Authorization': `Bearer ${keyInput}` } });
+            const models = data.data || [];
+            elements.modelSelect.innerHTML = '';
+            if (models.length > 0) {
+                models.sort((a, b) => a.id.localeCompare(b.id)).forEach(model => {
+                    // A simple filter for chat-completion models
+                    if (!model.id.includes('embed') && !model.id.includes('vision')) {
+                      const option = document.createElement('option');
+                      option.value = model.id;
+                      option.textContent = model.id;
+                      elements.modelSelect.appendChild(option);
+                    }
+                });
+                const lastModel = localStorage.getItem('aiReader_lastModel');
+                if (lastModel && elements.modelSelect.querySelector(`option[value="${lastModel}"]`)) {
+                    elements.modelSelect.value = lastModel;
+                }
+
+                elements.modelSelect.disabled = false;
+                apiConfig = { url: completionsUrl, key: keyInput, isConnected: true };
+                elements.apiStatus.textContent = `连接成功！已加载 ${elements.modelSelect.options.length} 个可用模型。`;
+                elements.apiStatus.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-300');
+                elements.connectApiBtn.innerHTML = '<i class="fa fa-check mr-2"></i>已连接';
+                saveState();
+            } else {
+                throw new Error('API返回的模型列表为空。');
+            }
+        } catch (error) {
+            apiConfig.isConnected = false;
+            elements.modelSelect.innerHTML = '<option value="">请先连接API</option>';
+            elements.modelSelect.disabled = true;
+            elements.apiStatus.textContent = `连接失败: ${error.message}`;
+            elements.apiStatus.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/50', 'dark:text-red-300');
+            elements.connectApiBtn.disabled = false;
+            elements.connectApiBtn.innerHTML = '<i class="fa fa-connectdevelop mr-2"></i>连接模型';
+        }
+    });
+    
+    elements.themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      const icon = elements.themeToggle.querySelector('i');
+      icon.classList.toggle('fa-sun-o', isDark);
+      icon.classList.toggle('fa-moon-o', !isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      // Update dialogue color to match the new theme's default text color
+      const defaultTextColor = getComputedStyle(document.documentElement).getPropertyValue('--reading-text-color');
+      elements.dialogueColorPicker.value = defaultTextColor.trim();
+      applyReadingSettings();
+      saveState();
+    });
+
+    ['input', 'change'].forEach(evt => {
+        elements.apiUrl.addEventListener(evt, saveState);
+        elements.apiKey.addEventListener(evt, saveState);
+        elements.modelSelect.addEventListener(evt, saveState);
+        elements.contextMemorySlider.addEventListener(evt, saveState);
+        elements.temperatureSlider.addEventListener(evt, saveState);
+        elements.presetText.addEventListener(evt, saveState);
+        elements.outputFormat.addEventListener(evt, saveState);
+        elements.formatPrompt.addEventListener(evt, saveState);
+        elements.fontSizeSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
+        elements.lineHeightSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
+        elements.letterSpacingSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
+        elements.dialogueBoldToggle.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
+        elements.dialogueColorPicker.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
+    });
+
+    elements.tabBtnConfig.addEventListener('click', () => {
+        elements.tabBtnConfig.classList.add('active');
+        elements.tabBtnPreset.classList.remove('active');
+        elements.tabContentConfig.classList.remove('hidden');
+        elements.tabContentPreset.classList.add('hidden');
+    });
+    elements.tabBtnPreset.addEventListener('click', () => {
+        elements.tabBtnPreset.classList.add('active');
+        elements.tabBtnConfig.classList.remove('active');
+        elements.tabContentPreset.classList.remove('hidden');
+        elements.tabContentConfig.classList.add('hidden');
+    });
+    elements.toggleKeyBtn.addEventListener('click', () => {
+      const icon = elements.toggleKeyBtn.querySelector('i');
+      elements.apiKey.type = (elements.apiKey.type === 'password') ? 'text' : 'password';
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    });
+    elements.contextMemorySlider.addEventListener('input', (e) => elements.memoryValue.textContent = `${e.target.value}章`);
+    elements.temperatureSlider.addEventListener('input', (e) => elements.temperatureValue.textContent = parseFloat(e.target.value).toFixed(1));
+    elements.presetUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (event) => { elements.presetText.value = event.target.result; saveState(); };
+        reader.readAsText(file);
+      }
+    });
+    elements.outputFormat.addEventListener('change', () => {
+        if (story.length > 0) renderChapter(currentChapterIndex)
+    });
+    elements.prevChapterBtn.addEventListener('click', () => { if (currentChapterIndex > 0) renderChapter(currentChapterIndex - 1) });
+    elements.nextChapterBtn.addEventListener('click', () => { if (currentChapterIndex < story.length - 1) renderChapter(currentChapterIndex + 1) });
+    elements.prevPageBtn.addEventListener('click', () => { if (currentPageIndex > 0) { currentPageIndex--; renderCurrentPage(); } });
+    elements.nextPageBtn.addEventListener('click', () => { if (currentPageIndex < chapterPages.length - 1) { currentPageIndex++; renderCurrentPage(); } });
+    elements.continueStoryBtn.addEventListener('click', () => generateChapter("请自然地延续上一章的结尾，创作下一章的内容。"));
+    elements.regenerateChapterBtn.addEventListener('click', () => generateChapter("请根据相同的上下文，重新生成当前这一章的内容，可以尝试不同的情节走向或描写方式。", true));
+    elements.customPromptBtn.addEventListener('click', () => elements.customPromptModal.classList.remove('hidden'));
+    elements.closeCustomPromptBtn.addEventListener('click', () => elements.customPromptModal.classList.add('hidden'));
+    elements.submitCustomPromptBtn.addEventListener('click', () => {
+        const prompt = elements.customPromptInput.value;
+        if (prompt.trim()) {
+            generateChapter(prompt);
+            elements.customPromptModal.classList.add('hidden');
+            elements.customPromptInput.value = '';
+        }
+    });
+    elements.openSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('hidden'));
+    elements.closeSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.add('hidden'));
+    
+    elements.fontUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const fontDataUrl = event.target.result;
+                const fontName = 'CustomReadingFont';
+                const newStyle = document.createElement('style');
+                newStyle.textContent = `@font-face { font-family: '${fontName}'; src: url('${fontDataUrl}'); }`;
+                document.head.appendChild(newStyle);
+                document.documentElement.style.setProperty('--reading-font', `'${fontName}'`);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    elements.resetDialogueColorBtn.addEventListener('click', () => {
+        const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--reading-text-color');
+        elements.dialogueColorPicker.value = defaultColor.trim();
+        applyReadingSettings();
+        saveState();
+    });
+
+    // --- FIXED: File Export with UTF-8 BOM ---
+    function downloadAsTxt(filename, text) {
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    elements.exportChapterBtn.addEventListener('click', () => {
+      const chapter = story[currentChapterIndex];
+      const filename = `${chapter.title.replace(/[\/\\?%*:|"<>]/g, '_') || '当前章节'}.txt`;
+      downloadAsTxt(filename, chapter.content);
+    });
+    elements.exportAllChaptersBtn.addEventListener('click', () => {
+      let fullStoryText = '';
+      story.forEach((chapter, index) => {
+        fullStoryText += `# ${chapter.title}\n\n${chapter.content}\n\n${index < story.length - 1 ? '--------------------\n\n' : ''}`;
+      });
+      downloadAsTxt('完整故事.txt', fullStoryText);
+    });
+
+    // --- INITIALIZATION ---
+    const initApp = () => {
+        const isDarkStored = localStorage.getItem('theme') === 'dark';
+        const isDarkSystem = !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (isDarkStored || isDarkSystem) {
+            document.documentElement.classList.add('dark');
+            elements.themeToggle.querySelector('i').classList.replace('fa-moon-o', 'fa-sun-o');
+        }
+        
+        loadState();
+
+        if (story.length > 0) {
+            renderChapter(currentChapterIndex);
+        } else {
+            renderWelcomeMessage();
+        }
+    };
+    
+    initApp();
+});
+// --- END: FULLY FUNCTIONAL JAVASCRIPT CODE ---
+  </script>
+</body>
+</html>
