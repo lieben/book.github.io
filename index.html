@@ -88,208 +88,87 @@
     </div>
   </header>
 
-  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
-    <!-- 左侧控制面板 -->
-    <aside class="lg:w-1/3 space-y-6">
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded-xl shadow-sm p-2 flex space-x-2 dark:bg-slate-800">
-            <button id="tab-btn-config" class="tab-button flex-1 py-2 px-4 rounded-lg text-sm font-semibold border-2 border-transparent transition-custom active dark:text-gray-300">
-                <i class="fa fa-cogs mr-2"></i>模型设置
-            </button>
-            <button id="tab-btn-preset" class="tab-button flex-1 py-2 px-4 rounded-lg text-sm font-semibold border-2 border-transparent transition-custom dark:text-gray-300">
-                <i class="fa fa-file-text-o mr-2"></i>故事设定
-            </button>
+  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col">
+    <!-- 生成控制栏 -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-3 justify-between items-center transition-custom hover:shadow-md dark:bg-slate-800">
+      <div class="flex items-center space-x-2">
+        <button id="prev-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600" disabled>
+          <i class="fa fa-arrow-left mr-2"></i>上一章
+        </button>
+        <span id="chapter-info" class="text-sm text-gray-500 px-2 dark:text-gray-400">第 1 / 1 章</span>
+        <button id="next-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600">
+          下一章 <i class="fa fa-arrow-right ml-2"></i>
+        </button>
+      </div>
+      <div class="flex space-x-2 flex-wrap gap-2">
+        <button id="open-model-settings" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-custom flex items-center">
+          <i class="fa fa-cogs mr-2"></i>模型设置
+        </button>
+        <button id="open-story-preset" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
+          <i class="fa fa-file-text-o mr-2"></i>故事设定
+        </button>
+        <button id="custom-prompt-btn" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
+          <i class="fa fa-magic mr-2"></i>自定义生成
+        </button>
+        <button id="continue-story" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom flex items-center">
+          <i class="fa fa-play mr-2"></i>继续生成
+        </button>
+        <button id="regenerate-chapter" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-custom flex items-center">
+          <i class="fa fa-refresh mr-2"></i>重新生成
+        </button>
+      </div>
+    </div>
+
+    <!-- 阅读区域 -->
+    <div id="reading-area-wrapper" class="bg-white rounded-xl shadow-sm overflow-hidden flex-grow transition-custom hover:shadow-md flex flex-col" style="background-color: var(--reading-bg-color);">
+      <div id="reading-area" class="p-8 md:p-10 lg:p-12 min-h-[500px] relative flex-grow overflow-y-auto scrollbar-hide" style="color: var(--reading-text-color); font-family: var(--reading-font); font-size: var(--reading-font-size); line-height: var(--reading-line-height); letter-spacing: var(--reading-letter-spacing);">
+        <!-- 加载状态 -->
+        <div id="loading-state" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 z-10 hidden">
+          <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+            <p class="text-gray-600 dark:text-gray-300">AI正在奋笔疾书...请稍候</p>
+          </div>
         </div>
 
-        <!-- Tab Content: Model Config -->
-        <div id="tab-content-config">
-            <div class="bg-white rounded-xl shadow-sm p-5 transition-custom hover:shadow-md space-y-6 dark:bg-slate-800">
-                <!-- API 配置面板 -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                        <i class="fa fa-plug mr-2"></i>API 配置
-                    </h2>
-                    <form id="api-form" class="space-y-3">
-                        <div>
-                            <label for="api-type" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 类型</label>
-                            <select id="api-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
-                                <option value="openai" selected>OpenAI</option>
-                                <option value="gemini">Gemini</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="api-url" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 地址</label>
-                            <input type="url" id="api-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="https://api.openai.com/v1/chat/completions">
-                        </div>
-                        <div>
-                            <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API Key</label>
-                            <div class="relative">
-                                <input type="password" id="api-key" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
-                                <button type="button" id="toggle-key" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                                    <i class="fa fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" id="connect-api" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-custom flex items-center justify-center disabled:opacity-75 disabled:cursor-wait">
-                            <i class="fa fa-connectdevelop mr-2"></i>连接模型
-                        </button>
-                        <div id="api-status" class="hidden text-sm py-2 px-3 rounded-md"></div>
-                    </form>
-                </div>
-                <!-- 模型与参数设置 -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                      <i class="fa fa-sliders mr-2"></i>生成参数
-                    </h2>
-                    <div class="space-y-3">
-                      <div>
-                        <label for="model-select" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">选择模型</label>
-                        <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light" disabled>
-                          <option value="">请先连接API</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label for="context-memory" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">上下文记忆 (最近章节数)</label>
-                        <div class="flex items-center">
-                          <input type="range" id="context-memory" min="0" max="50" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
-                          <span id="memory-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">3章</span>
-                        </div>
-                      </div>
-                      <div>
-                        <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">创意温度</label>
-                        <div class="flex items-center">
-                          <input type="range" id="temperature" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
-                          <span id="temperature-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">0.7</span>
-                        </div>
-                      </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Tab Content: Story Preset -->
-        <div id="tab-content-preset" class="hidden">
-            <div class="bg-white rounded-xl shadow-sm p-5 transition-custom hover:shadow-md space-y-6 dark:bg-slate-800">
-                <!-- 故事预设 -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                        <i class="fa fa-file-text-o mr-2"></i>故事预设
-                    </h2>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">导入预设 (TXT)</label>
-                            <div class="flex items-center justify-center w-full">
-                                <label for="preset-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:bg-slate-700 transition-custom">
-                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <i class="fa fa-cloud-upload text-2xl text-gray-400 mb-2"></i>
-                                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">点击上传</span> 或拖放文件</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">支持 .txt 格式</p>
-                                    </div>
-                                    <input id="preset-upload" type="file" class="hidden" accept=".txt">
-                                </label>
-                            </div>
-                        </div>
-                        <div>
-                            <label for="preset-text" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">预设内容</label>
-                            <textarea id="preset-text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-40 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="输入故事背景、角色设定等预设内容...">### 故事设定
-- 世界观：架空魔法世界，存在四个元素王国
-- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿
-- 目标：寻找失落的元素之书，阻止黑暗势力崛起</textarea>
-                        </div>
-                    </div>
-                </div>
-                <!-- 输出格式 -->
-                <div>
-                    <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                        <i class="fa fa-code mr-2"></i>输出格式要求
-                    </h2>
-                    <div class="space-y-3">
-                        <label for="output-format" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">内容格式</label>
-                        <select id="output-format" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
-                            <option value="text">纯文本</option>
-                            <option value="markdown" selected>Markdown</option>
-                            <option value="html">HTML</option>
-                        </select>
-                         <textarea id="format-prompt" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-24 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="可以添加额外的格式要求，例如：请总是以旁白开始，用对话推动剧情。">请使用 Markdown 格式，章节标题使用 H1，段落清晰。</textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- 右侧阅读与控制区域 -->
-    <div class="lg:w-2/3 flex flex-col">
-      <!-- 生成控制栏 -->
-      <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-3 justify-between items-center transition-custom hover:shadow-md dark:bg-slate-800">
-        <div class="flex items-center space-x-2">
-          <button id="prev-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600" disabled>
-            <i class="fa fa-arrow-left mr-2"></i>上一章
-          </button>
-          <span id="chapter-info" class="text-sm text-gray-500 px-2 dark:text-gray-400">第 1 / 1 章</span>
-          <button id="next-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600">
-            下一章 <i class="fa fa-arrow-right ml-2"></i>
-          </button>
-        </div>
-        <div class="flex space-x-2 flex-wrap gap-2">
-          <button id="custom-prompt-btn" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
-            <i class="fa fa-magic mr-2"></i>自定义生成
-          </button>
-          <button id="continue-story" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom flex items-center">
-            <i class="fa fa-play mr-2"></i>继续生成
-          </button>
-          <button id="regenerate-chapter" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-custom flex items-center">
-            <i class="fa fa-refresh mr-2"></i>重新生成
-          </button>
+        <!-- 内容区域 -->
+        <div id="content-area-container">
+          <h1 id="chapter-title-display" class="text-3xl md:text-4xl font-bold mb-6 text-center" style="color: var(--reading-text-color);"></h1>
+          <div id="content-area" class="prose max-w-none">
+            <!-- Paginated content will be loaded by JS -->
+          </div>
         </div>
       </div>
 
-      <!-- 阅读区域 -->
-      <div id="reading-area-wrapper" class="bg-white rounded-xl shadow-sm overflow-hidden flex-grow transition-custom hover:shadow-md flex flex-col" style="background-color: var(--reading-bg-color);">
-        <div id="reading-area" class="p-8 md:p-10 lg:p-12 min-h-[500px] relative flex-grow overflow-y-auto scrollbar-hide" style="color: var(--reading-text-color); font-family: var(--reading-font); font-size: var(--reading-font-size); line-height: var(--reading-line-height); letter-spacing: var(--reading-letter-spacing);">
-          <!-- 加载状态 -->
-          <div id="loading-state" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 z-10 hidden">
-            <div class="text-center">
-              <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-              <p class="text-gray-600 dark:text-gray-300">AI正在奋笔疾书...请稍候</p>
-            </div>
+      <!-- 底部工具栏 -->
+      <div class="bg-gray-50/50 border-t border-gray-200/80 p-4 flex flex-wrap justify-between items-center backdrop-blur-sm dark:bg-slate-800/80 dark:border-t-slate-700">
+        <div class="flex items-center space-x-4 mb-2 md:mb-0">
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            <i class="fa fa-file-word-o mr-1"></i>字数: <span id="word-count">0</span>
           </div>
-
-          <!-- 内容区域 -->
-          <div id="content-area-container">
-            <h1 id="chapter-title-display" class="text-3xl md:text-4xl font-bold mb-6 text-center" style="color: var(--reading-text-color);"></h1>
-            <div id="content-area" class="prose max-w-none">
-              <!-- Paginated content will be loaded by JS -->
-            </div>
+          <!-- Pagination Controls -->
+          <div id="pagination-controls" class="flex items-center space-x-2 hidden">
+              <button id="prev-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="上一页">
+                  <i class="fa fa-chevron-left text-gray-600 dark:text-gray-300"></i>
+              </button>
+              <span id="page-info" class="text-xs text-gray-500 dark:text-gray-400 px-1"></span>
+              <button id="next-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="下一页">
+                  <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300"></i>
+              </button>
           </div>
         </div>
-
-        <!-- 底部工具栏 -->
-        <div class="bg-gray-50/50 border-t border-gray-200/80 p-4 flex flex-wrap justify-between items-center backdrop-blur-sm dark:bg-slate-800/80 dark:border-t-slate-700">
-          <div class="flex items-center space-x-4 mb-2 md:mb-0">
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              <i class="fa fa-file-word-o mr-1"></i>字数: <span id="word-count">0</span>
-            </div>
-            <!-- Pagination Controls -->
-            <div id="pagination-controls" class="flex items-center space-x-2 hidden">
-                <button id="prev-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="上一页">
-                    <i class="fa fa-chevron-left text-gray-600 dark:text-gray-300"></i>
-                </button>
-                <span id="page-info" class="text-xs text-gray-500 dark:text-gray-400 px-1"></span>
-                <button id="next-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="下一页">
-                    <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300"></i>
-                </button>
-            </div>
-          </div>
-          <div class="flex space-x-2">
-            <button id="open-settings" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="阅读设置">
-              <i class="fa fa-sliders text-gray-600 dark:text-gray-300"></i>
-            </button>
-            <button id="export-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出本章 (TXT)">
-              <i class="fa fa-download text-gray-600 dark:text-gray-300"></i>
-            </button>
-            <button id="export-all-chapters" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出全部故事 (TXT)">
-              <i class="fa fa-save text-gray-600 dark:text-gray-300"></i>
-            </button>
-          </div>
+        <div class="flex space-x-2">
+          <button id="edit-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="编辑本章">
+            <i class="fa fa-edit text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <button id="open-settings" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="阅读设置">
+            <i class="fa fa-sliders text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <button id="export-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出本章 (TXT)">
+            <i class="fa fa-download text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <button id="export-all-chapters" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出全部故事 (TXT)">
+            <i class="fa fa-save text-gray-600 dark:text-gray-300"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -367,6 +246,168 @@
       </div>
   </div>
 
+  <!-- 编辑章节模态框 -->
+  <div id="edit-chapter-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col dark:bg-slate-800">
+          <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-primary">编辑章节</h3>
+              <button id="close-edit-chapter" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+                  <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+              </button>
+          </div>
+          <div class="p-6 flex-grow flex flex-col">
+              <div class="mb-4">
+                  <label for="edit-chapter-title" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">章节标题</label>
+                  <input type="text" id="edit-chapter-title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
+              </div>
+              <div class="flex-grow flex flex-col">
+                  <label for="edit-chapter-content" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">章节内容</label>
+                  <textarea id="edit-chapter-content" class="flex-grow w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none dark:bg-slate-700 dark:border-slate-600 dark:text-light" style="min-height: 300px;"></textarea>
+              </div>
+              <div class="mt-4 flex justify-between items-center">
+                  <button id="delete-chapter" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-custom flex items-center">
+                      <i class="fa fa-trash mr-2"></i>删除章节
+                  </button>
+                  <div class="flex space-x-2">
+                      <button id="cancel-edit" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-custom">取消</button>
+                      <button id="save-edit" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-custom">保存</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- 模型设置模态框 -->
+  <div id="model-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800">
+          <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-primary">模型设置</h3>
+              <button id="close-model-settings" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+                  <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+              </button>
+          </div>
+          <div class="p-6 space-y-6 overflow-y-auto">
+              <!-- API 配置面板 -->
+              <div>
+                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                      <i class="fa fa-plug mr-2"></i>API 配置
+                  </h2>
+                  <form id="api-form" class="space-y-3">
+                      <div>
+                          <label for="api-type" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 类型</label>
+                          <select id="api-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
+                              <option value="openai" selected>OpenAI</option>
+                              <option value="gemini">Gemini</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label for="api-url" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API 地址</label>
+                          <input type="url" id="api-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="https://api.openai.com/v1/chat/completions">
+                      </div>
+                      <div>
+                          <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">API Key</label>
+                          <div class="relative">
+                              <input type="password" id="api-key" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
+                              <button type="button" id="toggle-key" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                                  <i class="fa fa-eye"></i>
+                              </button>
+                          </div>
+                      </div>
+                      <button type="button" id="connect-api" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-custom flex items-center justify-center disabled:opacity-75 disabled:cursor-wait">
+                          <i class="fa fa-connectdevelop mr-2"></i>连接模型
+                      </button>
+                      <div id="api-status" class="hidden text-sm py-2 px-3 rounded-md"></div>
+                  </form>
+              </div>
+              <!-- 模型与参数设置 -->
+              <div>
+                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                    <i class="fa fa-sliders mr-2"></i>生成参数
+                  </h2>
+                  <div class="space-y-3">
+                    <div>
+                      <label for="model-select" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">选择模型</label>
+                      <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light" disabled>
+                        <option value="">请先连接API</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="context-memory" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">上下文记忆 (最近章节数)</label>
+                      <div class="flex items-center">
+                        <input type="range" id="context-memory" min="0" max="50" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+                        <span id="memory-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">3章</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">创意温度</label>
+                      <div class="flex items-center">
+                        <input type="range" id="temperature" min="0.1" max="1.5" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-600">
+                        <span id="temperature-value" class="ml-4 text-sm font-medium w-12 text-right dark:text-gray-300">0.7</span>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- 故事设定模态框 -->
+  <div id="story-preset-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
+      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800">
+          <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+              <h3 class="text-lg font-semibold text-primary">故事设定</h3>
+              <button id="close-story-preset" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+                  <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+              </button>
+          </div>
+          <div class="p-6 space-y-6 overflow-y-auto">
+              <!-- 故事预设 -->
+              <div>
+                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                      <i class="fa fa-file-text-o mr-2"></i>故事预设
+                  </h2>
+                  <div class="space-y-3">
+                      <div>
+                          <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">导入预设 (TXT)</label>
+                          <div class="flex items-center justify-center w-full">
+                              <label for="preset-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:bg-slate-700 transition-custom">
+                                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                      <i class="fa fa-cloud-upload text-2xl text-gray-400 mb-2"></i>
+                                      <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">点击上传</span> 或拖放文件</p>
+                                      <p class="text-xs text-gray-500 dark:text-gray-400">支持 .txt 格式</p>
+                                  </div>
+                                  <input id="preset-upload" type="file" class="hidden" accept=".txt">
+                              </label>
+                          </div>
+                      </div>
+                      <div>
+                          <label for="preset-text" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">预设内容</label>
+                          <textarea id="preset-text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-40 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="输入故事背景、角色设定等预设内容...">### 故事设定
+- 世界观：架空魔法世界，存在四个元素王国
+- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿
+- 目标：寻找失落的元素之书，阻止黑暗势力崛起</textarea>
+                      </div>
+                  </div>
+              </div>
+              <!-- 输出格式 -->
+              <div>
+                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                      <i class="fa fa-code mr-2"></i>输出格式要求
+                  </h2>
+                  <div class="space-y-3">
+                      <label for="output-format" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">内容格式</label>
+                      <select id="output-format" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
+                          <option value="text">纯文本</option>
+                          <option value="markdown" selected>Markdown</option>
+                          <option value="html">HTML</option>
+                      </select>
+                       <textarea id="format-prompt" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-24 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="可以添加额外的格式要求，例如：请总是以旁白开始，用对话推动剧情。">请使用 Markdown 格式，章节标题使用 H1，段落清晰。</textarea>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
   <script>
     // --- START: FULLY FUNCTIONAL JAVASCRIPT CODE ---
@@ -379,7 +420,7 @@
     const mdConverter = new showdown.Converter({ noHeaderId: true, simplifiedAutoLink: true, openLinksInNewWindow: true });
     let apiConfig = {
       type: 'openai', // 'openai' or 'gemini'
-      url: 'https://generativelanguage.googleapis.com', // 默认填Gemini地址
+      url: 'https://cdn.generativelanguage.googleapis.com', // 默认填Gemini地址
       key: '',
       isConnected: false,
     };
@@ -403,10 +444,6 @@
     // --- DOM ELEMENTS ---
     const elements = {
       themeToggle: document.getElementById('theme-toggle'),
-      tabBtnConfig: document.getElementById('tab-btn-config'),
-      tabBtnPreset: document.getElementById('tab-btn-preset'),
-      tabContentConfig: document.getElementById('tab-content-config'),
-      tabContentPreset: document.getElementById('tab-content-preset'),
       apiType: document.getElementById('api-type'),
       apiUrl: document.getElementById('api-url'),
       apiKey: document.getElementById('api-key'),
@@ -457,6 +494,20 @@
       closeCustomPromptBtn: document.getElementById('close-custom-prompt'),
       customPromptInput: document.getElementById('custom-prompt-input'),
       submitCustomPromptBtn: document.getElementById('submit-custom-prompt'),
+      editChapterBtn: document.getElementById('edit-chapter'),
+      editChapterModal: document.getElementById('edit-chapter-modal'),
+      closeEditChapterBtn: document.getElementById('close-edit-chapter'),
+      editChapterTitleInput: document.getElementById('edit-chapter-title'),
+      editChapterContentArea: document.getElementById('edit-chapter-content'),
+      deleteChapterBtn: document.getElementById('delete-chapter'),
+      cancelEditBtn: document.getElementById('cancel-edit'),
+      saveEditBtn: document.getElementById('save-edit'),
+      openModelSettingsBtn: document.getElementById('open-model-settings'),
+      openStoryPresetBtn: document.getElementById('open-story-preset'),
+      modelSettingsModal: document.getElementById('model-settings-modal'),
+      closeModelSettingsBtn: document.getElementById('close-model-settings'),
+      storyPresetModal: document.getElementById('story-preset-modal'),
+      closeStoryPresetBtn: document.getElementById('close-story-preset'),
     };
     
     // --- NEW: STATE PERSISTENCE FUNCTIONS ---
@@ -495,7 +546,7 @@
 
             if (state.apiConfig) {
                 elements.apiType.value = state.apiConfig.type || 'openai';
-                elements.apiUrl.value = state.apiConfig.url || 'https://generativelanguage.googleapis.com';
+                elements.apiUrl.value = state.apiConfig.url || 'https://cdn.generativelanguage.googleapis.com';
                 elements.apiKey.value = state.apiConfig.key || '';
             }
 
@@ -653,6 +704,7 @@
       elements.regenerateChapterBtn.disabled = !hasStory;
       elements.exportChapterBtn.disabled = !hasStory;
       elements.exportAllChaptersBtn.disabled = !hasStory;
+      elements.editChapterBtn.disabled = !hasStory;
     };
 
     const updatePaginationNav = () => {
@@ -796,7 +848,7 @@
         parseApiKeys();
         const currentKey = getCurrentApiKey();
         const apiType = elements.apiType.value;
-        const urlInput = elements.apiUrl.value.trim() || 'https://generativelanguage.googleapis.com';
+        const urlInput = elements.apiUrl.value.trim() || 'https://cdn.generativelanguage.googleapis.com';
         const keyInput = currentKey;
         if (!keyInput) {
             alert('请输入API Key。');
@@ -898,37 +950,6 @@
         elements.dialogueColorPicker.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
     });
 
-    elements.tabBtnConfig.addEventListener('click', () => {
-        elements.tabBtnConfig.classList.add('active');
-        elements.tabBtnPreset.classList.remove('active');
-        elements.tabContentConfig.classList.remove('hidden');
-        elements.tabContentPreset.classList.add('hidden');
-    });
-    elements.tabBtnPreset.addEventListener('click', () => {
-        elements.tabBtnPreset.classList.add('active');
-        elements.tabBtnConfig.classList.remove('active');
-        elements.tabContentPreset.classList.remove('hidden');
-        elements.tabContentConfig.classList.add('hidden');
-    });
-    elements.toggleKeyBtn.addEventListener('click', () => {
-      const icon = elements.toggleKeyBtn.querySelector('i');
-      elements.apiKey.type = (elements.apiKey.type === 'password') ? 'text' : 'password';
-      icon.classList.toggle('fa-eye');
-      icon.classList.toggle('fa-eye-slash');
-    });
-    elements.contextMemorySlider.addEventListener('input', (e) => elements.memoryValue.textContent = `${e.target.value}章`);
-    elements.temperatureSlider.addEventListener('input', (e) => elements.temperatureValue.textContent = parseFloat(e.target.value).toFixed(1));
-    elements.presetUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file && file.type === "text/plain") {
-        const reader = new FileReader();
-        reader.onload = (event) => { elements.presetText.value = event.target.result; saveState(); };
-        reader.readAsText(file);
-      }
-    });
-    elements.outputFormat.addEventListener('change', () => {
-        if (story.length > 0) renderChapter(currentChapterIndex)
-    });
     elements.prevChapterBtn.addEventListener('click', () => { if (currentChapterIndex > 0) renderChapter(currentChapterIndex - 1) });
     elements.nextChapterBtn.addEventListener('click', () => { if (currentChapterIndex < story.length - 1) renderChapter(currentChapterIndex + 1) });
     elements.prevPageBtn.addEventListener('click', () => { if (currentPageIndex > 0) { currentPageIndex--; renderCurrentPage(); } });
@@ -947,7 +968,88 @@
     });
     elements.openSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('hidden'));
     elements.closeSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.add('hidden'));
+    elements.editChapterBtn.addEventListener('click', () => {
+        const chapter = story[currentChapterIndex];
+        elements.editChapterModal.classList.remove('hidden');
+        elements.editChapterTitleInput.value = chapter.title;
+        elements.editChapterContentArea.value = chapter.content;
+    });
+    elements.closeEditChapterBtn.addEventListener('click', () => {
+        elements.editChapterModal.classList.add('hidden');
+    });
+    elements.saveEditBtn.addEventListener('click', () => {
+        const chapter = story[currentChapterIndex];
+        const newTitle = elements.editChapterTitleInput.value.trim();
+        const newContent = elements.editChapterContentArea.value.trim();
+        
+        if (newTitle && newContent) {
+            chapter.title = newTitle;
+            chapter.content = newContent;
+            renderChapter(currentChapterIndex);
+            saveState();
+        } else {
+            alert('章节标题和内容不能为空！');
+        }
+        elements.editChapterModal.classList.add('hidden');
+    });
+    elements.deleteChapterBtn.addEventListener('click', () => {
+        if (confirm('确定要删除此章节吗？这将无法恢复。')) {
+            story.splice(currentChapterIndex, 1);
+            if (story.length === 0) {
+                renderWelcomeMessage();
+            } else {
+                currentChapterIndex = Math.min(currentChapterIndex, story.length - 1);
+                renderChapter(currentChapterIndex);
+            }
+            saveState();
+            elements.editChapterModal.classList.add('hidden');
+        }
+    });
+    elements.cancelEditBtn.addEventListener('click', () => {
+        elements.editChapterModal.classList.add('hidden');
+    });
+
+    // --- 新增模态框事件监听器 ---
+    elements.openModelSettingsBtn.addEventListener('click', () => {
+        elements.modelSettingsModal.classList.remove('hidden');
+    });
     
+    elements.closeModelSettingsBtn.addEventListener('click', () => {
+        elements.modelSettingsModal.classList.add('hidden');
+    });
+    
+    elements.openStoryPresetBtn.addEventListener('click', () => {
+        elements.storyPresetModal.classList.remove('hidden');
+    });
+    
+    elements.closeStoryPresetBtn.addEventListener('click', () => {
+        elements.storyPresetModal.classList.add('hidden');
+    });
+
+    // --- 原有功能事件监听器 ---
+    elements.toggleKeyBtn.addEventListener('click', () => {
+      const icon = elements.toggleKeyBtn.querySelector('i');
+      elements.apiKey.type = (elements.apiKey.type === 'password') ? 'text' : 'password';
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    });
+    
+    elements.contextMemorySlider.addEventListener('input', (e) => elements.memoryValue.textContent = `${e.target.value}章`);
+    elements.temperatureSlider.addEventListener('input', (e) => elements.temperatureValue.textContent = parseFloat(e.target.value).toFixed(1));
+    
+    elements.presetUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (event) => { elements.presetText.value = event.target.result; saveState(); };
+        reader.readAsText(file);
+      }
+    });
+    
+    elements.outputFormat.addEventListener('change', () => {
+        if (story.length > 0) renderChapter(currentChapterIndex)
+    });
+
     elements.fontUpload.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
