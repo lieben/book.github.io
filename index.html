@@ -368,38 +368,37 @@
         </button>
       </div>
       <div class="p-6 space-y-6 overflow-y-auto">
-        <div class="flex">
-          <!-- 左侧垂直按钮栏 -->
-          <div class="w-32 flex-shrink-0 pr-3">
-            <div class="space-y-1">
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="character">
-                <i class="fa fa-user mr-1"></i>人设
-              </button>
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="player">
-                <i class="fa fa-user-circle mr-1"></i>玩家人设
-              </button>
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="world">
-                <i class="fa fa-globe mr-1"></i>世界观
-              </button>
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="style">
-                <i class="fa fa-paint-brush mr-1"></i>文风
-              </button>
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="script">
-                <i class="fa fa-file-text mr-1"></i>剧本
-              </button>
-              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="format">
-                <i class="fa fa-code mr-1"></i>内容格式
-              </button>
-            </div>
-            <div class="mt-3">
-              <button id="clear-all-presets" class="w-full text-left px-2 py-1 text-xs text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-700 rounded flex items-center">
-                <i class="fa fa-times-circle mr-1"></i>清空
-              </button>
-            </div>
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex space-x-1">
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="character" title="人设">
+              <i class="fa fa-user text-xs"></i>
+            </button>
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="player" title="玩家人设">
+              <i class="fa fa-user-circle text-xs"></i>
+            </button>
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="world" title="世界观">
+              <i class="fa fa-globe text-xs"></i>
+            </button>
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="style" title="文风">
+              <i class="fa fa-paint-brush text-xs"></i>
+            </button>
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="script" title="剧本">
+              <i class="fa fa-file-text text-xs"></i>
+            </button>
+            <button class="tab-btn-preset p-2 rounded-md text-sm w-8 h-8 flex items-center justify-center" 
+                    data-tab="format" title="内容格式">
+              <i class="fa fa-code text-xs"></i>
+            </button>
           </div>
-          
-          <!-- 右侧内容区域 -->
-          <div class="flex-grow">
+          <button id="clear-all-presets" class="text-xs text-gray-500 hover:text-primary flex items-center">
+            <i class="fa fa-times-circle mr-1"></i>清空选择
+          </button>
+        </div>
         <div id="preset-tab-content">
           <!-- 动态内容区 -->
         </div>
@@ -410,7 +409,12 @@
           <div class="flex flex-wrap gap-2" id="selected-presets-tags"></div>
         </div>
         
-    
+        <!-- 生成故事按钮 -->
+        <div class="mt-6 flex justify-center">
+          <button id="generate-from-presets" class="px-6 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom flex items-center">
+            <i class="fa fa-magic mr-2"></i>根据选择生成故事
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -890,7 +894,7 @@
                 }
                 renderChapter(currentChapterIndex);
             } else {
-                story.push({ title: `第 ${story.length + 1} 章`, content: newContent });
+                story.push({ title: `第 ${story.length + 1} 章`, content: newContent, customPrompt: prompt });
                 renderChapter(story.length - 1);
             }
             // `renderChapter` already calls saveState
@@ -1016,7 +1020,11 @@
     elements.prevPageBtn.addEventListener('click', () => { if (currentPageIndex > 0) { currentPageIndex--; renderCurrentPage(); } });
     elements.nextPageBtn.addEventListener('click', () => { if (currentPageIndex < chapterPages.length - 1) { currentPageIndex++; renderCurrentPage(); } });
     elements.continueStoryBtn.addEventListener('click', () => generateChapter("请自然地延续上一章的结尾，创作下一章的内容。"));
-    elements.regenerateChapterBtn.addEventListener('click', () => generateChapter("请根据相同的上下文，重新生成当前这一章的内容，可以尝试不同的情节走向或描写方式。", true));
+    elements.regenerateChapterBtn.addEventListener('click', () => {
+        const chapter = story[currentChapterIndex];
+        const prompt = chapter.customPrompt || "请根据相同的上下文，重新生成当前这一章的内容，可以尝试不同的情节走向或描写方式。";
+        generateChapter(prompt, true);
+    });
     elements.customPromptBtn.addEventListener('click', () => elements.customPromptModal.classList.remove('hidden'));
     elements.closeCustomPromptBtn.addEventListener('click', () => elements.customPromptModal.classList.add('hidden'));
     elements.submitCustomPromptBtn.addEventListener('click', () => {
@@ -1239,8 +1247,8 @@
       
       // 生成故事按钮
       const generateBtn = document.createElement('button');
-      generateBtn.className = 'px-3 py-1 bg-secondary text-white rounded hover:bg-secondary/90 text-sm flex items-center';
-      generateBtn.innerHTML = '<i class="fa fa-magic mr-1"></i>生成故事';
+      // generateBtn.className = 'px-3 py-1 bg-secondary text-white rounded hover:bg-secondary/90 text-sm flex items-center';
+      // generateBtn.innerHTML = '<i class="fa fa-magic mr-1"></i>生成故事';
       generateBtn.onclick = generateStoryFromPresets;
       
       topActions.appendChild(addBtn);
