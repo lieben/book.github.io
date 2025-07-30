@@ -127,7 +127,13 @@
         <div id="loading-state" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 z-10 hidden">
           <div class="text-center">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-            <p class="text-gray-600 dark:text-gray-300">AI正在创作中...请稍候</p>
+            <p class="text-gray-600 dark:text-gray-300">AI创作中...</p>
+            <div class="mt-3 w-64">
+              <div class="bg-gray-200 dark:bg-slate-600 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-primary h-2.5 rounded-full" style="width: 0%"></div>
+              </div>
+              <p id="progress-text" class="text-xs text-gray-500 dark:text-gray-400 mt-1">准备中...</p>
+            </div>
           </div>
         </div>
 
@@ -352,61 +358,61 @@
       </div>
   </div>
 
-  <!-- 故事设定模态框 -->
+  <!-- 故事预设模态框 -->
   <div id="story-preset-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden p-4">
-      <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800">
-          <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
-              <h3 class="text-lg font-semibold text-primary">故事设定</h3>
-              <button id="close-story-preset" class="p-2 rounded-full hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
-                  <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
-              </button>
-          </div>
-          <div class="p-6 space-y-6 overflow-y-auto">
-              <!-- 故事预设 -->
-              <div>
-                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                      <i class="fa fa-file-text-o mr-2"></i>故事预设
-                  </h2>
-                  <div class="space-y-3">
-                      <div>
-                          <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">导入预设 (TXT)</label>
-                          <div class="flex items-center justify-center w-full">
-                              <label for="preset-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:bg-slate-700 transition-custom">
-                                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                      <i class="fa fa-cloud-upload text-2xl text-gray-400 mb-2"></i>
-                                      <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">点击上传</span> 或拖放文件</p>
-                                      <p class="text-xs text-gray-500 dark:text-gray-400">支持 .txt 格式</p>
-                                  </div>
-                                  <input id="preset-upload" type="file" class="hidden" accept=".txt">
-                              </label>
-                          </div>
-                      </div>
-                      <div>
-                          <label for="preset-text" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">预设内容</label>
-                          <textarea id="preset-text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-40 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="输入故事背景、角色设定等预设内容...">### 故事设定
-- 世界观：架空魔法世界，存在四个元素王国
-- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿
-- 目标：寻找失落的元素之书，阻止黑暗势力崛起</textarea>
-                      </div>
-                  </div>
-              </div>
-              <!-- 输出格式 -->
-              <div>
-                  <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
-                      <i class="fa fa-code mr-2"></i>输出格式要求
-                  </h2>
-                  <div class="space-y-3">
-                      <label for="output-format" class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">内容格式</label>
-                      <select id="output-format" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:bg-slate-700 dark:border-slate-600 dark:text-light">
-                          <option value="text">纯文本</option>
-                          <option value="markdown" selected>Markdown</option>
-                          <option value="html">HTML</option>
-                      </select>
-                       <textarea id="format-prompt" class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-24 dark:bg-slate-700 dark:border-slate-600 dark:text-light dark:placeholder-gray-400" placeholder="可以添加额外的格式要求，例如：请总是以旁白开始，用对话推动剧情。">请使用 Markdown 格式，章节标题使用 H1，段落清晰。</textarea>
-                  </div>
-              </div>
-          </div>
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800">
+      <div class="p-5 border-b border-gray-200 flex justify-between items-center dark:border-slate-700">
+        <h3 class="text-lg font-semibold text-primary">故事预设</h3>
+        <button id="close-story-preset" class="p-1 rounded-md hover:bg-gray-100 transition-custom dark:hover:bg-slate-700">
+          <i class="fa fa-times text-gray-600 dark:text-gray-300"></i>
+        </button>
       </div>
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <div class="flex">
+          <!-- 左侧垂直按钮栏 -->
+          <div class="w-32 flex-shrink-0 pr-3">
+            <div class="space-y-1">
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="character">
+                <i class="fa fa-user mr-1"></i>人设
+              </button>
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="player">
+                <i class="fa fa-user-circle mr-1"></i>玩家人设
+              </button>
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="world">
+                <i class="fa fa-globe mr-1"></i>世界观
+              </button>
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="style">
+                <i class="fa fa-paint-brush mr-1"></i>文风
+              </button>
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="script">
+                <i class="fa fa-file-text mr-1"></i>剧本
+              </button>
+              <button class="tab-btn-preset w-full text-left px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-slate-700" data-tab="format">
+                <i class="fa fa-code mr-1"></i>内容格式
+              </button>
+            </div>
+            <div class="mt-3">
+              <button id="clear-all-presets" class="w-full text-left px-2 py-1 text-xs text-gray-500 hover:text-primary hover:bg-gray-100 dark:hover:bg-slate-700 rounded flex items-center">
+                <i class="fa fa-times-circle mr-1"></i>清空
+              </button>
+            </div>
+          </div>
+          
+          <!-- 右侧内容区域 -->
+          <div class="flex-grow">
+        <div id="preset-tab-content">
+          <!-- 动态内容区 -->
+        </div>
+        
+        <!-- 已选择项目总览 -->
+        <div id="selected-presets-summary" class="mt-6 pt-4 border-t border-gray-200 dark:border-slate-700 hidden">
+          <h4 class="text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">已选择的预设</h4>
+          <div class="flex flex-wrap gap-2" id="selected-presets-tags"></div>
+        </div>
+        
+    
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
@@ -456,10 +462,11 @@
       memoryValue: document.getElementById('memory-value'),
       temperatureSlider: document.getElementById('temperature'),
       temperatureValue: document.getElementById('temperature-value'),
-      presetUpload: document.getElementById('preset-upload'),
-      presetText: document.getElementById('preset-text'),
-      outputFormat: document.getElementById('output-format'),
-      formatPrompt: document.getElementById('format-prompt'),
+      // 创建缺失的元素引用
+      presetUpload: { addEventListener: () => {} }, // 空对象模拟
+      presetText: { value: `### 故事设定\n- 世界观：架空魔法世界，存在四个元素王国\n- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿\n- 目标：寻找失落的元素之书，阻止黑暗势力崛起` },
+      outputFormat: { value: 'markdown', addEventListener: () => {} },
+      formatPrompt: { value: '请使用 Markdown 格式，章节标题使用 H1，段落清晰。' },
       loadingState: document.getElementById('loading-state'),
       chapterTitleDisplay: document.getElementById('chapter-title-display'),
       contentArea: document.getElementById('content-area'),
@@ -719,8 +726,52 @@
       }
     };
 
+    // 进度条控制
+    let progressInterval;
     const showLoading = (isLoading) => {
         elements.loadingState.classList.toggle('hidden', !isLoading);
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        if (isLoading) {
+            // 重置进度条
+            progressBar.style.width = '0%';
+            progressText.textContent = '准备中...';
+            
+            // 模拟进度增加
+            let progress = 0;
+            progressInterval = setInterval(() => {
+                // 缓慢增加到95%，留5%给最终完成
+                if (progress < 95) {
+                    progress += Math.random() * 3;
+                    progress = Math.min(progress, 95);
+                    progressBar.style.width = `${progress}%`;
+                    
+                    // 更新进度文本
+                    if (progress < 20) {
+                        progressText.textContent = '构思情节中...';
+                    } else if (progress < 40) {
+                        progressText.textContent = '设计人物对话...';
+                    } else if (progress < 60) {
+                        progressText.textContent = '丰富场景描写...';
+                    } else if (progress < 80) {
+                        progressText.textContent = '完善故事细节...';
+                    } else {
+                        progressText.textContent = '最终润色中...';
+                    }
+                }
+            }, 300);
+        } else {
+            // 停止进度模拟
+            clearInterval(progressInterval);
+            // 完成进度
+            progressBar.style.width = '100%';
+            progressText.textContent = '生成完成!';
+            // 短暂延迟后隐藏加载状态
+            setTimeout(() => {
+                elements.loadingState.classList.add('hidden');
+            }, 500);
+        }
     };
     
     // --- NEW: WELCOME MESSAGE FUNCTION ---
@@ -857,7 +908,7 @@
         parseApiKeys();
         const currentKey = getCurrentApiKey();
         const apiType = elements.apiType.value;
-        const urlInput = elements.apiUrl.value.trim() || 'https://cdn.generativelanguage.googleapis.com';
+        const urlInput = elements.apiUrl.value.trim() || 'https://generativelanguage.googleapis.com';
         const keyInput = currentKey;
         if (!keyInput) {
             alert('请输入API密钥。');
@@ -949,9 +1000,10 @@
         elements.modelSelect.addEventListener(evt, saveState);
         elements.contextMemorySlider.addEventListener(evt, saveState);
         elements.temperatureSlider.addEventListener(evt, saveState);
-        elements.presetText.addEventListener(evt, saveState);
-        elements.outputFormat.addEventListener(evt, saveState);
-        elements.formatPrompt.addEventListener(evt, saveState);
+        // 移除对不存在元素的事件监听
+        // elements.presetText.addEventListener(evt, saveState);
+        // elements.outputFormat.addEventListener(evt, saveState);
+        // elements.formatPrompt.addEventListener(evt, saveState);
         elements.fontSizeSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
         elements.lineHeightSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
         elements.letterSpacingSlider.addEventListener(evt, () => { applyReadingSettings(); saveState(); });
@@ -1107,6 +1159,524 @@
       });
       downloadAsTxt('完整故事.txt', fullStoryText);
     });
+
+    // --- 故事预设数据结构 ---
+    const presetData = {
+      character: [], // {id, name, desc}
+      player: [],    // {id, name, desc} - 玩家人设
+      world: [],     // {id, name, desc}
+      style: [],     // {id, name, desc}
+      script: [],    // {id, name, desc}
+      format: []     // {id, name, desc} - 内容格式
+    };
+    // 预设本地存储key
+    const PRESET_KEY = 'aiNovelPresets_v1';
+    // 加载预设
+    function loadPresets() {
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          ['character','player','world','style','script','format'].forEach(k=>{
+            presetData[k] = Array.isArray(data[k]) ? data[k] : [];
+          });
+        } catch(e) {}
+      }
+    }
+    // 保存预设
+    function savePresets() {
+      localStorage.setItem(PRESET_KEY, JSON.stringify(presetData));
+    }
+    // 生成唯一id
+    function uuid() { return 'id-' + Math.random().toString(36).slice(2,10) + Date.now(); }
+
+    // 选中的预设项
+    const selectedPresets = {
+      character: [],
+      player: [],
+      world: [],
+      style: [],
+      script: [],
+      format: []
+    };
+    
+    // 保存选中的预设状态
+    function saveSelectedPresets() {
+      localStorage.setItem('aiNovelSelectedPresets', JSON.stringify(selectedPresets));
+    }
+    
+    // 加载选中的预设状态
+    function loadSelectedPresets() {
+      const savedPresets = localStorage.getItem('aiNovelSelectedPresets');
+      if (savedPresets) {
+        try {
+          const data = JSON.parse(savedPresets);
+          ['character', 'player', 'world', 'style', 'script', 'format'].forEach(k => {
+            selectedPresets[k] = Array.isArray(data[k]) ? data[k] : [];
+          });
+        } catch(e) {
+          console.error('加载选中预设状态失败:', e);
+        }
+      }
+    }
+    
+    // 渲染tab内容
+    function renderPresetTab(tab) {
+      const container = document.getElementById('preset-tab-content');
+      container.innerHTML = '';
+      const list = presetData[tab];
+      const tabName = {character:'人设',player:'玩家人设',world:'世界观',style:'文风',script:'剧本',format:'内容格式'}[tab];
+      
+      // 顶部操作区
+      const topActions = document.createElement('div');
+      topActions.className = 'flex justify-between items-center mb-3';
+      
+      // 新增按钮
+      const addBtn = document.createElement('button');
+      addBtn.className = 'px-3 py-1 bg-primary text-white rounded hover:bg-primary/90 text-sm';
+      addBtn.textContent = `新增${tabName}`;
+      addBtn.onclick = ()=>showPresetEdit(tab);
+      
+      // 生成故事按钮
+      const generateBtn = document.createElement('button');
+      generateBtn.className = 'px-3 py-1 bg-secondary text-white rounded hover:bg-secondary/90 text-sm flex items-center';
+      generateBtn.innerHTML = '<i class="fa fa-magic mr-1"></i>生成故事';
+      generateBtn.onclick = generateStoryFromPresets;
+      
+      topActions.appendChild(addBtn);
+      topActions.appendChild(generateBtn);
+      container.appendChild(topActions);
+      
+      // 列表
+      const ul = document.createElement('ul');
+      ul.className = 'space-y-2';
+      list.forEach(item=>{
+        const li = document.createElement('li');
+        const isSelected = selectedPresets[tab].includes(item.id);
+        li.className = `flex items-center justify-between ${isSelected ? 'bg-primary/10 border border-primary/30' : 'bg-gray-50 dark:bg-slate-700'} rounded px-3 py-2 cursor-pointer transition-colors`;
+        li.innerHTML = `
+          <div class="flex items-center">
+            <div class="mr-2">
+              <input type="checkbox" class="preset-checkbox h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" 
+                data-tab="${tab}" data-id="${item.id}" ${isSelected ? 'checked' : ''}>
+            </div>
+            <div class="flex-grow">
+              <div class='font-semibold'>${item.name}</div>
+              <div class='text-xs text-gray-400 mt-1 hidden preset-desc'>${item.desc||''}</div>
+            </div>
+            <div class="ml-2">
+              <button class="toggle-desc p-1 rounded hover:bg-gray-200 dark:hover:bg-slate-600" title="显示/隐藏详情">
+                <i class="fa fa-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        const btns = document.createElement('div');
+        btns.className = 'flex space-x-1';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'p-1 rounded hover:bg-primary/10';
+        editBtn.innerHTML = '<i class="fa fa-edit"></i>';
+        editBtn.onclick = (e)=>{
+          e.stopPropagation();
+          showPresetEdit(tab, item);
+        };
+        const delBtn = document.createElement('button');
+        delBtn.className = 'p-1 rounded hover:bg-red-100';
+        delBtn.innerHTML = '<i class="fa fa-trash"></i>';
+        delBtn.onclick = (e)=>{ 
+          e.stopPropagation();
+          if(confirm('确定删除？')){ 
+            // 如果删除的是已选中的项，也从选中列表中移除
+            if(selectedPresets[tab].includes(item.id)) {
+              selectedPresets[tab] = selectedPresets[tab].filter(id => id !== item.id);
+            }
+            presetData[tab]=list.filter(i=>i.id!==item.id); 
+            savePresets(); 
+            renderPresetTab(tab);
+          } 
+        };
+        btns.appendChild(editBtn); 
+        btns.appendChild(delBtn);
+        li.appendChild(btns);
+        
+        // 添加展开/折叠按钮的点击事件
+        const toggleBtn = li.querySelector('.toggle-desc');
+        toggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const descElem = li.querySelector('.preset-desc');
+          descElem.classList.toggle('hidden');
+          const icon = toggleBtn.querySelector('i');
+          icon.classList.toggle('fa-chevron-down');
+          icon.classList.toggle('fa-chevron-up');
+        });
+        
+        // 点击整行切换选中状态
+        li.addEventListener('click', (e) => {
+          if(e.target.closest('button')) return; // 如果点击的是按钮，不处理
+          
+          const checkbox = li.querySelector('.preset-checkbox');
+          checkbox.checked = !checkbox.checked;
+          
+          // 更新选中状态
+          if(checkbox.checked) {
+            if(!selectedPresets[tab].includes(item.id)) {
+              selectedPresets[tab].push(item.id);
+            }
+          } else {
+            selectedPresets[tab] = selectedPresets[tab].filter(id => id !== item.id);
+          }
+          
+          // 更新样式
+          li.classList.toggle('bg-primary/10', checkbox.checked);
+          li.classList.toggle('border', checkbox.checked);
+          li.classList.toggle('border-primary/30', checkbox.checked);
+          li.classList.toggle('bg-gray-50', !checkbox.checked);
+          li.classList.toggle('dark:bg-slate-700', !checkbox.checked);
+          
+          // 更新总览区域
+          updateSelectedPresetsSummary();
+        });
+        
+        // 复选框事件
+        li.querySelector('.preset-checkbox').addEventListener('change', (e) => {
+          e.stopPropagation();
+          const tabName = e.target.dataset.tab;
+          const itemId = e.target.dataset.id;
+          
+          if(e.target.checked) {
+            if(!selectedPresets[tabName].includes(itemId)) {
+              selectedPresets[tabName].push(itemId);
+            }
+          } else {
+            selectedPresets[tabName] = selectedPresets[tabName].filter(id => id !== itemId);
+          }
+          
+          // 更新样式
+          li.classList.toggle('bg-primary/10', e.target.checked);
+          li.classList.toggle('border', e.target.checked);
+          li.classList.toggle('border-primary/30', e.target.checked);
+          li.classList.toggle('bg-gray-50', !e.target.checked);
+          li.classList.toggle('dark:bg-slate-700', !e.target.checked);
+          
+          // 更新总览区域
+          updateSelectedPresetsSummary();
+        });
+        
+        ul.appendChild(li);
+      });
+      container.appendChild(ul);
+      
+      // 如果列表为空，显示提示
+      if(list.length === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'text-center text-gray-500 py-4';
+        emptyMsg.textContent = `暂无${tabName}，请点击上方按钮添加`;
+        container.appendChild(emptyMsg);
+      }
+      
+      // 底部区域 - 显示已选择的项目数量
+      const selectedCount = selectedPresets[tab].length;
+      if(selectedCount > 0) {
+        const selectedInfo = document.createElement('div');
+        selectedInfo.className = 'mt-4 text-sm text-primary';
+        selectedInfo.textContent = `已选择 ${selectedCount} 个${tabName}`;
+        container.appendChild(selectedInfo);
+      }
+    }
+    
+    // 更新已选择项目的总览区域
+    function updateSelectedPresetsSummary() {
+      const summaryContainer = document.getElementById('selected-presets-summary');
+      const tagsContainer = document.getElementById('selected-presets-tags');
+      
+      // 获取所有已选择的项目
+      const allSelected = [];
+      for(const tab in selectedPresets) {
+        selectedPresets[tab].forEach(id => {
+          const item = presetData[tab].find(i => i.id === id);
+          if(item) {
+            allSelected.push({
+              id: item.id,
+              name: item.name,
+              tab: tab,
+              tabName: {character:'人设',player:'玩家人设',world:'世界观',style:'文风',script:'剧本',format:'内容格式'}[tab]
+            });
+          }
+        });
+      }
+      
+      // 如果没有选择任何项目，隐藏总览区域
+      if(allSelected.length === 0) {
+        summaryContainer.classList.add('hidden');
+        return;
+      }
+      
+      // 显示总览区域
+      summaryContainer.classList.remove('hidden');
+      
+      // 清空标签容器
+      tagsContainer.innerHTML = '';
+      
+      // 添加标签
+      allSelected.forEach(item => {
+        const tag = document.createElement('div');
+        tag.className = 'px-2 py-1 bg-primary/10 text-primary text-xs rounded-full flex items-center';
+        tag.innerHTML = `
+          <span class="mr-1">${item.tabName}:</span>
+          <span>${item.name}</span>
+          <button class="ml-1 hover:text-red-500" data-tab="${item.tab}" data-id="${item.id}">
+            <i class="fa fa-times-circle"></i>
+          </button>
+        `;
+        
+        // 添加删除按钮的点击事件
+        tag.querySelector('button').addEventListener('click', (e) => {
+          const tab = e.currentTarget.dataset.tab;
+          const id = e.currentTarget.dataset.id;
+          
+          // 从选中列表中移除
+          selectedPresets[tab] = selectedPresets[tab].filter(itemId => itemId !== id);
+          
+          // 更新当前标签页
+          renderPresetTab(currentPresetTab);
+          
+          // 更新总览区域
+          updateSelectedPresetsSummary();
+        });
+        
+        tagsContainer.appendChild(tag);
+      });
+    }
+    
+    // 清空所有选择
+    function clearAllPresets() {
+      for(const tab in selectedPresets) {
+        selectedPresets[tab] = [];
+      }
+      
+      // 更新当前标签页
+      renderPresetTab(currentPresetTab);
+      
+      // 更新总览区域
+      updateSelectedPresetsSummary();
+    }
+    
+    // 根据选择的预设生成故事
+    function generateStoryFromPresets() {
+      // 检查是否有选择
+      const hasSelection = Object.values(selectedPresets).some(arr => arr.length > 0);
+      if(!hasSelection) {
+        alert('请至少选择一项预设');
+        return;
+      }
+      
+      // 生成prompt
+      const prompt = generatePromptFromPresets();
+      
+      // 关闭预设模态框
+      elements.storyPresetModal.classList.add('hidden');
+      
+      // 生成故事
+      generateChapter(prompt);
+    }
+    
+    // 更新选择的预设总览
+    function updateSelectedPresetsSummary() {
+      const summaryElement = document.getElementById('selected-presets-summary');
+      if (!summaryElement) return;
+      
+      // 统计各类预设的选择数量
+      const counts = {
+        character: selectedPresets.character.length,
+        player: selectedPresets.player.length,
+        world: selectedPresets.world.length,
+        script: selectedPresets.script.length,
+        style: selectedPresets.style.length,
+        format: selectedPresets.format.length
+      };
+      
+      const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      
+      // 更新总览内容
+      if (totalCount === 0) {
+        summaryElement.innerHTML = '<p class="text-gray-500">尚未选择任何预设</p>';
+        document.getElementById('generate-story-btn').classList.add('hidden');
+      } else {
+        let summaryHTML = '<p class="font-medium mb-2">已选择的预设：</p><ul class="text-sm space-y-1">';
+        
+        if (counts.character > 0) {
+          summaryHTML += `<li>角色：${counts.character} 个</li>`;
+        }
+        
+        if (counts.player > 0) {
+          summaryHTML += `<li>玩家人设：${counts.player} 个</li>`;
+        }
+        
+        if (counts.world > 0) {
+          summaryHTML += `<li>世界观：${counts.world} 个</li>`;
+        }
+        
+        if (counts.script > 0) {
+          summaryHTML += `<li>剧情：${counts.script} 个</li>`;
+        }
+        
+        if (counts.style > 0) {
+          summaryHTML += `<li>文风：${counts.style} 个</li>`;
+        }
+        
+        if (counts.format > 0) {
+          summaryHTML += `<li>内容格式：${counts.format} 个</li>`;
+        }
+        
+        summaryHTML += '</ul>';
+        summaryElement.innerHTML = summaryHTML;
+        document.getElementById('generate-story-btn').classList.remove('hidden');
+      }
+    }
+    
+    // 根据选择的预设生成prompt
+    function generatePromptFromPresets() {
+      let prompt = "请根据以下设定创作一个引人入胜的故事：\n\n";
+      
+      // 添加角色设定
+      if(selectedPresets.character.length > 0) {
+        prompt += "【角色设定】\n";
+        selectedPresets.character.forEach(id => {
+          const character = presetData.character.find(c => c.id === id);
+          if(character) {
+            prompt += `- ${character.name}：${character.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      // 添加玩家人设
+      if(selectedPresets.player && selectedPresets.player.length > 0) {
+        prompt += "【玩家人设】\n";
+        selectedPresets.player.forEach(id => {
+          const player = presetData.player.find(p => p.id === id);
+          if(player) {
+            prompt += `- ${player.name}：${player.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      // 添加世界观设定
+      if(selectedPresets.world.length > 0) {
+        prompt += "【世界观设定】\n";
+        selectedPresets.world.forEach(id => {
+          const world = presetData.world.find(w => w.id === id);
+          if(world) {
+            prompt += `- ${world.name}：${world.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      // 添加剧本设定
+      if(selectedPresets.script.length > 0) {
+        prompt += "【剧情设定】\n";
+        selectedPresets.script.forEach(id => {
+          const script = presetData.script.find(s => s.id === id);
+          if(script) {
+            prompt += `- ${script.name}：${script.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      // 添加文风设定
+      if(selectedPresets.style.length > 0) {
+        prompt += "【文风要求】\n";
+        selectedPresets.style.forEach(id => {
+          const style = presetData.style.find(s => s.id === id);
+          if(style) {
+            prompt += `- ${style.name}：${style.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      // 添加内容格式
+      if(selectedPresets.format && selectedPresets.format.length > 0) {
+        prompt += "【内容格式】\n";
+        selectedPresets.format.forEach(id => {
+          const format = presetData.format.find(f => f.id === id);
+          if(format) {
+            prompt += `- ${format.name}：${format.desc}\n`;
+          }
+        });
+        prompt += "\n";
+      }
+      
+      prompt += "请创作第一章的内容，确保故事情节连贯，人物形象鲜明，符合上述设定要求。";
+      
+      return prompt;
+    }
+    // 弹窗编辑
+    function showPresetEdit(tab, item) {
+      const isEdit = !!item;
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black/40 z-50 flex items-center justify-center';
+      modal.innerHTML = `<div class='bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md p-6'><h3 class='text-lg font-semibold mb-4'>${isEdit?'编辑':'新增'}${{character:'人设',player:'玩家人设',world:'世界观',style:'文风',script:'剧本',format:'内容格式'}[tab]}</h3><div class='space-y-3'><input id='preset-edit-name' class='w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-light' placeholder='名称' value='${item?item.name:''}'/><textarea id='preset-edit-desc' class='w-full px-3 py-2 border rounded dark:bg-slate-700 dark:border-slate-600 dark:text-light' placeholder='描述'>${item?item.desc||'':''}</textarea></div><div class='mt-4 flex justify-end space-x-2'><button id='preset-edit-cancel' class='px-4 py-1 rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-light'>取消</button><button id='preset-edit-save' class='px-4 py-1 rounded bg-primary text-white hover:bg-primary/90'>保存</button></div></div>`;
+      document.body.appendChild(modal);
+      modal.querySelector('#preset-edit-cancel').onclick = ()=>modal.remove();
+      modal.querySelector('#preset-edit-save').onclick = ()=>{
+        const name = modal.querySelector('#preset-edit-name').value.trim();
+        const desc = modal.querySelector('#preset-edit-desc').value.trim();
+        if(!name){alert('名称不能为空');return;}
+        if(isEdit){ item.name=name; item.desc=desc; } else { presetData[tab].push({id:uuid(),name,desc}); }
+        savePresets(); renderPresetTab(tab); modal.remove();
+      };
+    }
+    // tab切换
+    document.querySelectorAll('.tab-btn-preset').forEach(btn=>{
+      btn.onclick = function(){
+        document.querySelectorAll('.tab-btn-preset').forEach(b=>b.classList.remove('bg-primary','text-white'));
+        this.classList.add('bg-primary','text-white');
+        renderPresetTab(this.dataset.tab);
+      };
+    });
+    // 当前预设标签页
+    let currentPresetTab = 'character';
+    
+    // 初始化预设模态框
+    function initPresetModal() {
+      // 初始化标签页
+      document.querySelectorAll('.tab-btn-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn-preset').forEach(b => b.classList.remove('bg-primary', 'text-white'));
+          btn.classList.add('bg-primary', 'text-white');
+          currentPresetTab = btn.dataset.tab;
+          renderPresetTab(currentPresetTab);
+          updateSelectedPresetsSummary();
+        });
+      });
+      
+      // 清空选择按钮
+      document.getElementById('clear-all-presets').addEventListener('click', () => {
+        if(confirm('确定要清空所有选择吗？')) {
+          clearAllPresets();
+        }
+      });
+      
+      // 底部生成故事按钮
+      document.getElementById('generate-from-presets').addEventListener('click', generateStoryFromPresets);
+      
+      // 默认选中第一个标签
+      document.querySelector('.tab-btn-preset').click();
+      
+      // 初始化总览区域
+      updateSelectedPresetsSummary();
+    }
+    
+    // 初始化
+    loadPresets();
+    setTimeout(()=>{
+      initPresetModal();
+    }, 100);
 
     // --- INITIALIZATION ---
     const initApp = () => {
