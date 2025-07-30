@@ -468,9 +468,9 @@
       temperatureValue: document.getElementById('temperature-value'),
       // 创建缺失的元素引用
       presetUpload: { addEventListener: () => {} }, // 空对象模拟
-      presetText: { value: `### 故事设定\n- 世界观：架空魔法世界，存在四个元素王国\n- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿\n- 目标：寻找失落的元素之书，阻止黑暗势力崛起` },
+      presetText: { value: `### 故事设定\n\n### 人物设定\你\n### 世界观设定\穿书\n### 文风设定\穿书\n### 剧本设定\穿书\n### 内容格式设定\使用markdown格式\n### 生成规则\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容` },
       outputFormat: { value: 'markdown', addEventListener: () => {} },
-      formatPrompt: { value: '请使用 Markdown 格式，章节标题使用 H1，段落清晰。' },
+      formatPrompt: { value: '请使用 Markdown 格式，章节标题使用 H1。' },
       loadingState: document.getElementById('loading-state'),
       chapterTitleDisplay: document.getElementById('chapter-title-display'),
       contentArea: document.getElementById('content-area'),
@@ -574,7 +574,7 @@
                 elements.temperatureSlider.value = s.temperature || 0.7;
                 elements.temperatureValue.textContent = parseFloat(s.temperature || 0.7).toFixed(1);
                 
-                elements.presetText.value = s.presetText || `### 故事设定\n- 世界观：架空魔法世界，存在四个元素王国\n- 主角：艾琳，一位拥有罕见光元素亲和力的孤儿\n- 目标：寻找失落的元素之书，阻止黑暗势力崛起`;
+                elements.presetText.value = s.presetText || `### 故事设定\n\n### 人物设定\你\n### 世界观设定\穿书\n### 文风设定\穿书\n### 剧本设定\穿书\n### 内容格式设定\使用markdown格式\n### 生成规则\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容`;
                 elements.outputFormat.value = s.outputFormat || 'markdown';
                 elements.formatPrompt.value = s.formatPrompt || '请使用 Markdown 格式，章节标题使用 H1，段落清晰。';
                 
