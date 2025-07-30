@@ -83,14 +83,14 @@
         <i class="fa fa-book mr-2"></i>AI小说生成器
       </h1>
       <div class="flex items-center space-x-2">
-        <button id="open-model-settings" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
-          <i class="fa fa-cogs mr-1"></i>配置模型
+        <button id="open-model-settings" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="配置模型">
+          <i class="fa fa-cogs text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="open-story-preset" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
-          <i class="fa fa-file-text-o mr-1"></i>设置故事
+        <button id="open-story-preset" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="设置故事">
+          <i class="fa fa-file-text-o text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="theme-toggle" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
-          <i class="fa fa-moon-o mr-1"></i>主题
+        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom">
+          <i class="fa fa-moon-o text-gray-600 dark:text-gray-300"></i>
         </button>
       </div>
     </div>
@@ -107,15 +107,16 @@
         <button id="next-chapter" class="px-2 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600 text-sm">
           下章 <i class="fa fa-arrow-right ml-1"></i>
         </button>
-        <span class="text-gray-400 mx-2">|</span>
-        <button id="custom-prompt-btn" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-          <i class="fa fa-magic mr-1"></i>自定义情节
+      </div>
+      <div class="flex space-x-1">
+        <button id="custom-prompt-btn" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="自定义情节">
+          <i class="fa fa-magic text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="continue-story" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-          <i class="fa fa-play mr-1"></i>继续故事
+        <button id="continue-story" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="继续故事">
+          <i class="fa fa-play text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="regenerate-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-          <i class="fa fa-refresh mr-1"></i>重新生成
+        <button id="regenerate-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="重新生成">
+          <i class="fa fa-refresh text-gray-600 dark:text-gray-300"></i>
         </button>
       </div>
     </div>
@@ -156,18 +157,19 @@
                   <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300 text-sm"></i>
               </button>
           </div>
-          <span class="text-gray-400 mx-2">|</span>
-          <button id="edit-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-            <i class="fa fa-edit mr-1"></i>编辑章节
+        </div>
+        <div class="flex space-x-1">
+          <button id="edit-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="编辑章节">
+            <i class="fa fa-edit text-gray-600 dark:text-gray-300"></i>
           </button>
-          <button id="open-settings" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-            <i class="fa fa-sliders mr-1"></i>阅读设置
+          <button id="open-settings" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="阅读设置">
+            <i class="fa fa-sliders text-gray-600 dark:text-gray-300"></i>
           </button>
-          <button id="export-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-            <i class="fa fa-download mr-1"></i>导出本章
+          <button id="export-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出本章">
+            <i class="fa fa-download text-gray-600 dark:text-gray-300"></i>
           </button>
-          <button id="export-all-chapters" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
-            <i class="fa fa-save mr-1"></i>导出全部
+          <button id="export-all-chapters" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出全部">
+            <i class="fa fa-save text-gray-600 dark:text-gray-300"></i>
           </button>
         </div>
       </div>
