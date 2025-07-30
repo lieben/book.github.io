@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI小说生成器</title>
+  <title>爱小说 (增强版 v2.1)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script>
@@ -80,16 +80,26 @@
   <header class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-800 dark:border-b dark:border-slate-700">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-primary flex items-center">
-        <i class="fa fa-book mr-2"></i>AI小说生成器
+        <i class="fa fa-book mr-2"></i>爱小说 (增强版 v2.1)
       </h1>
       <div class="flex items-center space-x-2">
-        <button id="open-model-settings" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="配置模型">
+        <button id="custom-prompt-btn" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="自定义情节">
+          <i class="fa fa-magic text-gray-600 dark:text-gray-300"></i>
+        </button>
+        <button id="continue-story" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="继续故事">
+          <i class="fa fa-play text-gray-600 dark:text-gray-300"></i>
+        </button>
+        <button id="regenerate-chapter" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="重新生成">
+          <i class="fa fa-refresh text-gray-600 dark:text-gray-300"></i>
+        </button>
+        <span class="text-gray-300 mx-1">|</span>
+        <button id="open-model-settings" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="配置模型">
           <i class="fa fa-cogs text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="open-story-preset" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="设置故事">
+        <button id="open-story-preset" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom" title="设置故事">
           <i class="fa fa-file-text-o text-gray-600 dark:text-gray-300"></i>
         </button>
-        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom">
+        <button id="theme-toggle" class="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom">
           <i class="fa fa-moon-o text-gray-600 dark:text-gray-300"></i>
         </button>
       </div>
@@ -106,17 +116,6 @@
         <span id="chapter-info" class="text-sm text-gray-500 px-2 dark:text-gray-400">第 1 / 1 章</span>
         <button id="next-chapter" class="px-2 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600 text-sm">
           下章 <i class="fa fa-arrow-right ml-1"></i>
-        </button>
-      </div>
-      <div class="flex space-x-1">
-        <button id="custom-prompt-btn" class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="自定义情节">
-          <i class="fa fa-magic text-gray-600 dark:text-gray-300"></i>
-        </button>
-        <button id="continue-story" class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="继续故事">
-          <i class="fa fa-play text-gray-600 dark:text-gray-300"></i>
-        </button>
-        <button id="regenerate-chapter" class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="重新生成">
-          <i class="fa fa-refresh text-gray-600 dark:text-gray-300"></i>
         </button>
       </div>
     </div>
@@ -732,8 +731,10 @@
         elements.readingArea.innerHTML += `
             <div id="welcome-message" class="text-center p-10 flex flex-col items-center justify-center h-full">
                 <i class="fa fa-magic text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">欢迎使用 AI小说生成器</h2>
-
+                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">欢迎使用 爱小说</h2>
+                <p class="text-gray-500 dark:text-gray-400 max-w-md mb-4">
+                    点击顶部右侧的齿轮图标配置AI模型，然后点击魔法棒图标设置故事背景，最后点击播放按钮开始创作您的小说。
+                </p>
                 <div class="flex flex-wrap justify-center gap-2 text-sm text-gray-400 dark:text-gray-500">
                     <span class="flex items-center"><i class="fa fa-cogs mr-1"></i>模型设置</span>
                     <span class="flex items-center"><i class="fa fa-file-text-o mr-1"></i>故事设定</span>
