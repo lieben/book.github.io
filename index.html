@@ -229,10 +229,154 @@
                   <button id="reset-dialogue-color" class="text-xs text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary">重置</button>
               </div>
               <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">注意：对话高亮在“HTML”输出格式下无效。</p>
+                        </div>
+              
+                        <!-- 数据同步功能 -->
+                        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700">
+                            <h2 class="text-lg font-semibold mb-4 flex items-center text-primary">
+                                <i class="fa fa-exchange mr-2"></i>数据同步
+                            </h2>
+                            <div class="space-y-4">
+                                <div class="flex flex-wrap gap-2">
+                                    <button id="export-config" class="px-4 py-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-custom">
+                                        <i class="fa fa-download mr-2"></i>导出配置
+                                    </button>
+                                    <button id="export-all-data" class="px-4 py-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-custom">
+                                        <i class="fa fa-save mr-2"></i>导出全部数据
+                                    </button>
+                                    <label for="import-data" class="px-4 py-2 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-custom cursor-pointer">
+                                        <i class="fa fa-upload mr-2"></i>导入数据
+                                        <input type="file" id="import-data" accept=".json" class="hidden">
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    导出配置包含API设置和故事预设，导出全部数据还包括生成的文章内容
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <script>
+          // 导出当前配置(不含文章)
+          document.getElementById('export-config').addEventListener('click', () => {
+              const configData = {
+                  apiSettings: {
+                      type: document.getElementById('api-type').value,
+                      url: document.getElementById('api-url').value,
+                      key: document.getElementById('api-key').value
+                  },
+                  modelSettings: {
+                      model: document.getElementById('model-select').value,
+                      contextMemory: document.getElementById('context-memory').value,
+                      temperature: document.getElementById('temperature').value
+                  },
+                  meta: {
+                      version: "1.0",
+                      exportType: "config",
+                      timestamp: new Date().toISOString()
+                  }
+              };
+    
+              const blob = new Blob([JSON.stringify(configData, null, 2)], {type: 'application/json'});
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `story-config-${new Date().toLocaleDateString()}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+          });
+
+          // 导出全部数据(包含文章)
+          document.getElementById('export-all-data').addEventListener('click', () => {
+              const allData = {
+                  apiSettings: {
+                      type: document.getElementById('api-type').value,
+                      url: document.getElementById('api-url').value,
+                      key: document.getElementById('api-key').value
+                  },
+                  modelSettings: {
+                      model: document.getElementById('model-select').value,
+                      contextMemory: document.getElementById('context-memory').value,
+                      temperature: document.getElementById('temperature').value
+                  },
+                  storyChapters: window.story || [],
+                  meta: {
+                      version: "1.0",
+                      exportType: "full",
+                      timestamp: new Date().toISOString()
+                  }
+              };
+    
+              const blob = new Blob([JSON.stringify(allData, null, 2)], {type: 'application/json'});
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `story-backup-${new Date().toLocaleDateString()}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+          });
+
+          // 导入数据处理
+          document.getElementById('import-data').addEventListener('change', function(e) {
+              if (e.target.files.length === 0) return;
+    
+              const file = e.target.files[0];
+              const reader = new FileReader();
+    
+              reader.onload = (event) => {
+                  try {
+                      const data = JSON.parse(event.target.result);
+            
+                      if (data.meta.exportType === 'config') {
+                          // 导入配置
+                          if (data.apiSettings) {
+                              document.getElementById('api-type').value = data.apiSettings.type || 'openai';
+                              document.getElementById('api-url').value = data.apiSettings.url || '';
+                              document.getElementById('api-key').value = data.apiSettings.key || '';
+                          }
+                
+                          if (data.modelSettings) {
+                              document.getElementById('model-select').value = data.modelSettings.model || '';
+                              document.getElementById('context-memory').value = data.modelSettings.contextMemory || 3;
+                              document.getElementById('temperature').value = data.modelSettings.temperature || 0.7;
+                          }
+                
+                          alert('配置导入成功！');
+                      } else {
+                          // 导入全部数据
+                          if (data.apiSettings) {
+                              document.getElementById('api-type').value = data.apiSettings.type || 'openai';
+                              document.getElementById('api-url').value = data.apiSettings.url || '';
+                              document.getElementById('api-key').value = data.apiSettings.key || '';
+                          }
+                
+                          if (data.modelSettings) {
+                              document.getElementById('model-select').value = data.modelSettings.model || '';
+                              document.getElementById('context-memory').value = data.modelSettings.contextMemory || 3;
+                              document.getElementById('temperature').value = data.modelSettings.temperature || 0.7;
+                          }
+                
+                          if (data.storyChapters && Array.isArray(data.storyChapters)) {
+                              window.story = data.storyChapters;
+                              if (window.story.length > 0) {
+                                  window.currentChapterIndex = 0;
+                                  window.renderChapter(0);
+                              }
+                          }
+                
+                          alert('数据导入成功！已恢复' + (data.storyChapters?.length || 0) + '个章节');
+                      }
+                  } catch (error) {
+                      console.error('导入失败:', error);
+                      alert('导入失败：文件格式不正确或已损坏');
+                  }
+              };
+    
+              reader.readAsText(file);
+          });
+          </script>
   </div>
 
   <!-- 自定义生成模态框 -->
