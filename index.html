@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>阅读器 (增强版 v2.1)</title>
+  <title>AI小说生成器</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script>
@@ -80,41 +80,42 @@
   <header class="bg-white shadow-sm sticky top-0 z-50 dark:bg-slate-800 dark:border-b dark:border-slate-700">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-2xl font-bold text-primary flex items-center">
-        <i class="fa fa-book mr-2"></i>阅读器
+        <i class="fa fa-book mr-2"></i>AI小说生成器
       </h1>
-      <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-custom">
-        <i class="fa fa-moon-o text-gray-600 dark:text-gray-300"></i>
-      </button>
+      <div class="flex items-center space-x-2">
+        <button id="open-model-settings" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
+          <i class="fa fa-cogs mr-1"></i>配置模型
+        </button>
+        <button id="open-story-preset" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
+          <i class="fa fa-file-text-o mr-1"></i>设置故事
+        </button>
+        <button id="theme-toggle" class="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-custom dark:text-gray-300 dark:hover:text-gray-100">
+          <i class="fa fa-moon-o mr-1"></i>主题
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="flex-grow container mx-auto px-4 py-6 flex flex-col">
     <!-- 生成控制栏 -->
-    <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-3 justify-between items-center transition-custom hover:shadow-md dark:bg-slate-800">
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-wrap gap-2 justify-between items-center transition-custom hover:shadow-md dark:bg-slate-800">
       <div class="flex items-center space-x-2">
-        <button id="prev-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600" disabled>
-          <i class="fa fa-arrow-left mr-2"></i>上一章
+        <button id="prev-chapter" class="px-2 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600 text-sm" disabled>
+          <i class="fa fa-arrow-left mr-1"></i>上章
         </button>
         <span id="chapter-info" class="text-sm text-gray-500 px-2 dark:text-gray-400">第 1 / 1 章</span>
-        <button id="next-chapter" class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600">
-          下一章 <i class="fa fa-arrow-right ml-2"></i>
+        <button id="next-chapter" class="px-2 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-custom flex items-center disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600 text-sm">
+          下章 <i class="fa fa-arrow-right ml-1"></i>
         </button>
-      </div>
-      <div class="flex space-x-2 flex-wrap gap-2">
-        <button id="open-model-settings" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-custom flex items-center">
-          <i class="fa fa-cogs mr-2"></i>模型设置
+        <span class="text-gray-400 mx-2">|</span>
+        <button id="custom-prompt-btn" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+          <i class="fa fa-magic mr-1"></i>自定义情节
         </button>
-        <button id="open-story-preset" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
-          <i class="fa fa-file-text-o mr-2"></i>故事设定
+        <button id="continue-story" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+          <i class="fa fa-play mr-1"></i>继续故事
         </button>
-        <button id="custom-prompt-btn" class="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 transition-custom flex items-center">
-          <i class="fa fa-magic mr-2"></i>自定义生成
-        </button>
-        <button id="continue-story" class="px-4 py-2 bg-secondary text-white rounded-md hover:bg-secondary/90 transition-custom flex items-center">
-          <i class="fa fa-play mr-2"></i>继续生成
-        </button>
-        <button id="regenerate-chapter" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-custom flex items-center">
-          <i class="fa fa-refresh mr-2"></i>重新生成
+        <button id="regenerate-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+          <i class="fa fa-refresh mr-1"></i>重新生成
         </button>
       </div>
     </div>
@@ -126,7 +127,7 @@
         <div id="loading-state" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 z-10 hidden">
           <div class="text-center">
             <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-            <p class="text-gray-600 dark:text-gray-300">AI正在奋笔疾书...请稍候</p>
+            <p class="text-gray-600 dark:text-gray-300">AI正在创作中...请稍候</p>
           </div>
         </div>
 
@@ -146,28 +147,27 @@
             <i class="fa fa-file-word-o mr-1"></i>字数: <span id="word-count">0</span>
           </div>
           <!-- Pagination Controls -->
-          <div id="pagination-controls" class="flex items-center space-x-2 hidden">
-              <button id="prev-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="上一页">
-                  <i class="fa fa-chevron-left text-gray-600 dark:text-gray-300"></i>
+          <div id="pagination-controls" class="flex items-center space-x-1 hidden">
+              <button id="prev-page" class="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="上一页">
+                  <i class="fa fa-chevron-left text-gray-600 dark:text-gray-300 text-sm"></i>
               </button>
               <span id="page-info" class="text-xs text-gray-500 dark:text-gray-400 px-1"></span>
-              <button id="next-page" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="下一页">
-                  <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300"></i>
+              <button id="next-page" class="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed" title="下一页">
+                  <i class="fa fa-chevron-right text-gray-600 dark:text-gray-300 text-sm"></i>
               </button>
           </div>
-        </div>
-        <div class="flex space-x-2">
-          <button id="edit-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="编辑本章">
-            <i class="fa fa-edit text-gray-600 dark:text-gray-300"></i>
+          <span class="text-gray-400 mx-2">|</span>
+          <button id="edit-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="fa fa-edit mr-1"></i>编辑章节
           </button>
-          <button id="open-settings" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="阅读设置">
-            <i class="fa fa-sliders text-gray-600 dark:text-gray-300"></i>
+          <button id="open-settings" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="fa fa-sliders mr-1"></i>阅读设置
           </button>
-          <button id="export-chapter" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出本章 (TXT)">
-            <i class="fa fa-download text-gray-600 dark:text-gray-300"></i>
+          <button id="export-chapter" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="fa fa-download mr-1"></i>导出本章
           </button>
-          <button id="export-all-chapters" class="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700 transition-custom" title="导出全部故事 (TXT)">
-            <i class="fa fa-save text-gray-600 dark:text-gray-300"></i>
+          <button id="export-all-chapters" class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-custom dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="fa fa-save mr-1"></i>导出全部
           </button>
         </div>
       </div>
@@ -729,11 +729,14 @@
         if (existingWelcome) existingWelcome.remove();
         elements.readingArea.innerHTML += `
             <div id="welcome-message" class="text-center p-10 flex flex-col items-center justify-center h-full">
-                <i class="fa fa-book text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">欢迎使用 AI 阅读器</h2>
-                <p class="text-gray-500 dark:text-gray-400 max-w-md">
-                    请先在左侧 "模型设置" 中配置您的 API，然后点击 "继续生成" 或 "自定义生成" 来开始您的故事创作之旅。
-                </p>
+                <i class="fa fa-magic text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">欢迎使用 AI小说生成器</h2>
+
+                <div class="flex flex-wrap justify-center gap-2 text-sm text-gray-400 dark:text-gray-500">
+                    <span class="flex items-center"><i class="fa fa-cogs mr-1"></i>模型设置</span>
+                    <span class="flex items-center"><i class="fa fa-file-text-o mr-1"></i>故事设定</span>
+                    <span class="flex items-center"><i class="fa fa-play mr-1"></i>开始生成</span>
+                </div>
             </div>
         `;
         updateWordCount();
@@ -754,7 +757,7 @@
 
     async function generateChapter(prompt, isRegeneration = false) {
         if (!apiConfig.isConnected || !elements.modelSelect.value) {
-            alert('请先成功连接API并选择一个模型！');
+            alert('请先点击顶部齿轮图标配置AI模型！');
             return;
         }
         showLoading(true);
@@ -835,8 +838,8 @@
             }
             // `renderChapter` already calls saveState
         } catch (error) {
-            console.error('生成失败:', error);
-            alert(`生成内容时出错：${error.message}`);
+            console.error('小说生成失败:', error);
+            alert(`小说生成失败：${error.message}`);
         } finally {
             showLoading(false);
             nextApiKey();
@@ -851,7 +854,7 @@
         const urlInput = elements.apiUrl.value.trim() || 'https://cdn.generativelanguage.googleapis.com';
         const keyInput = currentKey;
         if (!keyInput) {
-            alert('请输入API Key。');
+            alert('请输入API密钥。');
             return;
         }
         let baseUrl = urlInput.replace(/\/+$/, '').replace(/\/v1\/.*$/, '');
@@ -901,7 +904,7 @@
                 }
                 elements.modelSelect.disabled = false;
                 apiConfig = { type: apiType, url: completionsUrl || urlInput, key: currentKey, isConnected: true };
-                elements.apiStatus.textContent = `连接成功！已加载 ${elements.modelSelect.options.length} 个可用模型。`;
+                elements.apiStatus.textContent = `模型连接成功！已加载 ${elements.modelSelect.options.length} 个可用模型。`;
                 elements.apiStatus.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900/50', 'dark:text-green-300');
                 elements.connectApiBtn.innerHTML = '<i class="fa fa-check mr-2"></i>已连接';
                 saveState();
@@ -913,7 +916,7 @@
             apiConfig.isConnected = false;
             elements.modelSelect.innerHTML = '<option value="">请先连接API</option>';
             elements.modelSelect.disabled = true;
-            elements.apiStatus.textContent = `连接失败: ${error.message}`;
+            elements.apiStatus.textContent = `模型连接失败: ${error.message}`;
             elements.apiStatus.classList.add('bg-red-100', 'text-red-800', 'dark:bg-red-900/50', 'dark:text-red-300');
             elements.connectApiBtn.disabled = false;
             elements.connectApiBtn.innerHTML = '<i class="fa fa-connectdevelop mr-2"></i>连接模型';
