@@ -614,7 +614,7 @@
       presetUpload: { addEventListener: () => {} }, // 空对象模拟
       presetText: { value: `### 故事设定\n\n### 人物设定\你\n### 世界观设定\穿书\n### 文风设定\穿书\n### 剧本设定\穿书\n### 内容格式设定\使用markdown格式\n### 生成规则\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容\n\n### 生成内容` },
       outputFormat: { value: 'markdown', addEventListener: () => {} },
-      formatPrompt: { value: '请使用 Markdown 格式，章节标题用 H1。' },
+      formatPrompt: { value: '请使用 Markdown 格式，章节标题使用 H1。' },
       loadingState: document.getElementById('loading-state'),
       chapterTitleDisplay: document.getElementById('chapter-title-display'),
       contentArea: document.getElementById('content-area'),
@@ -979,7 +979,7 @@
             const modelId = elements.modelSelect.value;
             let systemPrompt, messages, payload, endpoint, headers;
             if (apiType === 'openai') {
-                systemPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${buildStoryPreset()}\n\n### 输出格式要求\n${formatInstructions}`;
+                systemPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}`;
                 messages = [{ role: 'system', content: systemPrompt }];
                 const storyForContext = isRegeneration ? story.slice(0, currentChapterIndex) : story;
                 if (contextMemory > 0 && storyForContext.length > 0) {
@@ -1012,8 +1012,7 @@
                       contextText += `# ${chap.title}\n${chap.content}\n\n`;
                   });
                 }
-                // 构建完整的故事预设，包含所有已选设置
-                const fullPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${buildStoryPreset()}\n\n### 输出格式要求\n${formatInstructions}\n\n### 当前任务\n结合以下上下文继续创作:\n${contextText}\n\n${prompt}`;
+                const fullPrompt = `你是一位才华横溢的小说家。请根据以下设定和要求，继续创作故事。\n\n### 故事预设\n${storyPreset}\n\n### 输出格式要求\n${formatInstructions}\n\n${contextText}\n### 当前任务\n${prompt}`;
                 payload = {
                     contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
                 };
@@ -1320,15 +1319,7 @@
       world: [],     // {id, name, desc}
       style: [],     // {id, name, desc}
       script: [],    // {id, name, desc}
-      format: [      // {id, name, desc} - 内容格式
-        {
-          id: 'default-markdown',
-          name: 'markdown格式',
-          desc: '使用markdown格式编写，包含H1章节标题',
-          default: true
-        }
-      ],
-      selectedFormat: 'default-markdown'  // 默认选中项
+      format: []     // {id, name, desc} - 内容格式
     };
     // 预设本地存储key
     const PRESET_KEY = 'aiNovelPresets_v1';
