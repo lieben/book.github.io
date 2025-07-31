@@ -566,7 +566,90 @@
   <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
   <script>
     // --- START: FULLY FUNCTIONAL JAVASCRIPT CODE ---
+    // 保存选中的预设到localStorage
+    function saveSelectedPresets() {
+      const selected = {};
+      document.querySelectorAll('.preset-checkbox:checked').forEach(checkbox => {
+        const tab = checkbox.dataset.tab;
+        const id = checkbox.dataset.id;
+        if (!selected[tab]) selected[tab] = [];
+        selected[tab].push(id);
+      });
+      localStorage.setItem('selectedPresets', JSON.stringify(selected));
+    }
+
+    // 从localStorage加载选中的预设
+    function loadSelectedPresets() {
+      const saved = localStorage.getItem('selectedPresets');
+      if (saved) {
+        const selected = JSON.parse(saved);
+        for (const tab in selected) {
+          selected[tab].forEach(id => {
+            const checkbox = document.querySelector(`.preset-checkbox[data-tab="${tab}"][data-id="${id}"]`);
+            if (checkbox) checkbox.checked = true;
+          });
+        }
+      }
+    }
+    // 保存选中的预设到localStorage
+    function saveSelectedPresets() {
+      localStorage.setItem('selectedPresets', JSON.stringify(selectedPresets));
+    }
+
+    // 从localStorage加载选中的预设
+    function loadSelectedPresets() {
+      const saved = localStorage.getItem('selectedPresets');
+      if (saved) {
+        Object.assign(selectedPresets, JSON.parse(saved));
+      }
+    }
+    // 保存选中的预设到localStorage
+    function saveSelectedPresets() {
+      localStorage.setItem('selectedPresets', JSON.stringify(selectedPresets));
+    }
+
+    // 从localStorage加载选中的预设
+    function loadSelectedPresets() {
+      const saved = localStorage.getItem('selectedPresets');
+      if (saved) {
+        Object.assign(selectedPresets, JSON.parse(saved));
+      }
+    }
+
+    // 调试函数 - 打印当前选中状态
+    function logSelectedPresets() {
+      const selected = {};
+      document.querySelectorAll('.preset-checkbox:checked').forEach(checkbox => {
+        const tab = checkbox.dataset.tab;
+        const id = checkbox.dataset.id;
+        if (!selected[tab]) selected[tab] = [];
+        selected[tab].push(id);
+      });
+      console.log('当前选中状态:', selected);
+      console.log('保存的状态:', localStorage.getItem('selectedPresets'));
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+      // 加载保存的预设选择状态
+      console.log('开始加载保存的预设状态...');
+      loadSelectedPresets();
+      console.log('预设状态加载完成');
+      logSelectedPresets();
+
+      // 为所有预设复选框添加状态保存
+      document.querySelectorAll('.preset-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          saveSelectedPresets();
+          logSelectedPresets();
+        });
+      });
+
+      // 为清空选择按钮添加状态清除
+      document.getElementById('clear-all-presets')?.addEventListener('click', () => {
+        localStorage.removeItem('selectedPresets');
+        console.log('已清除保存的预设状态');
+        logSelectedPresets();
+      });
     // --- STATE MANAGEMENT ---
     let story = [];
     let currentChapterIndex = 0;
@@ -1392,6 +1475,26 @@
       }
     }
     
+    // 保存选中的预设状态
+    function saveSelectedPresets() {
+      localStorage.setItem('aiNovelSelectedPresets', JSON.stringify(selectedPresets));
+    }
+    
+    // 加载选中的预设状态
+    function loadSelectedPresets() {
+      const savedPresets = localStorage.getItem('aiNovelSelectedPresets');
+      if (savedPresets) {
+        try {
+          const data = JSON.parse(savedPresets);
+          ['character', 'player', 'world', 'style', 'script', 'format'].forEach(k => {
+            selectedPresets[k] = Array.isArray(data[k]) ? data[k] : [];
+          });
+        } catch(e) {
+          console.error('加载选中预设状态失败:', e);
+        }
+      }
+    }
+    
     // 渲染tab内容
     function renderPresetTab(tab) {
       const container = document.getElementById('preset-tab-content');
@@ -1653,57 +1756,63 @@
       generateChapter(prompt);
     }
     
-    // 更新选择的预设总览
+    // 更新选择的预设总览 - 安全版本
     function updateSelectedPresetsSummary() {
-      const summaryElement = document.getElementById('selected-presets-summary');
-      if (!summaryElement) return;
-      
-      // 统计各类预设的选择数量
-      const counts = {
-        character: selectedPresets.character.length,
-        player: selectedPresets.player.length,
-        world: selectedPresets.world.length,
-        script: selectedPresets.script.length,
-        style: selectedPresets.style.length,
-        format: selectedPresets.format.length
-      };
-      
-      const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
-      
-      // 更新总览内容
-      if (totalCount === 0) {
-        summaryElement.innerHTML = '<p class="text-gray-500">尚未选择任何预设</p>';
-        document.getElementById('generate-story-btn').classList.add('hidden');
-      } else {
-        let summaryHTML = '<p class="font-medium mb-2">已选择的预设：</p><ul class="text-sm space-y-1">';
+      try {
+        const summaryElement = document.getElementById('selected-presets-summary');
+        const generateBtn = document.getElementById('generate-from-presets');
         
-        if (counts.character > 0) {
-          summaryHTML += `<li>角色：${counts.character} 个</li>`;
+        if (!summaryElement || !generateBtn) return;
+        
+        // 统计各类预设的选择数量
+        const counts = {
+          character: selectedPresets.character.length,
+          player: selectedPresets.player.length,
+          world: selectedPresets.world.length,
+          script: selectedPresets.script.length,
+          style: selectedPresets.style.length,
+          format: selectedPresets.format.length
+        };
+        
+        const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+        
+        // 更新总览内容
+        if (totalCount === 0) {
+          summaryElement.innerHTML = '<p class="text-gray-500 dark:text-gray-400">尚未选择任何预设</p>';
+          summaryElement.classList.add('hidden');
+        } else {
+          let summaryHTML = '<p class="font-medium mb-2 dark:text-gray-300">已选择的预设：</p><ul class="text-sm space-y-1 dark:text-gray-400">';
+          
+          if (counts.character > 0) {
+            summaryHTML += `<li>角色：${counts.character} 个</li>`;
+          }
+          
+          if (counts.player > 0) {
+            summaryHTML += `<li>玩家人设：${counts.player} 个</li>`;
+          }
+          
+          if (counts.world > 0) {
+            summaryHTML += `<li>世界观：${counts.world} 个</li>`;
+          }
+          
+          if (counts.script > 0) {
+            summaryHTML += `<li>剧情：${counts.script} 个</li>`;
+          }
+          
+          if (counts.style > 0) {
+            summaryHTML += `<li>文风：${counts.style} 个</li>`;
+          }
+          
+          if (counts.format > 0) {
+            summaryHTML += `<li>内容格式：${counts.format} 个</li>`;
+          }
+          
+          summaryHTML += '</ul>';
+          summaryElement.innerHTML = summaryHTML;
+          summaryElement.classList.remove('hidden');
         }
-        
-        if (counts.player > 0) {
-          summaryHTML += `<li>玩家人设：${counts.player} 个</li>`;
-        }
-        
-        if (counts.world > 0) {
-          summaryHTML += `<li>世界观：${counts.world} 个</li>`;
-        }
-        
-        if (counts.script > 0) {
-          summaryHTML += `<li>剧情：${counts.script} 个</li>`;
-        }
-        
-        if (counts.style > 0) {
-          summaryHTML += `<li>文风：${counts.style} 个</li>`;
-        }
-        
-        if (counts.format > 0) {
-          summaryHTML += `<li>内容格式：${counts.format} 个</li>`;
-        }
-        
-        summaryHTML += '</ul>';
-        summaryElement.innerHTML = summaryHTML;
-        document.getElementById('generate-story-btn').classList.remove('hidden');
+      } catch (error) {
+        console.error('更新预设总览时出错:', error);
       }
     }
     
@@ -1814,40 +1923,60 @@
     // 当前预设标签页
     let currentPresetTab = 'character';
     
-    // 初始化预设模态框
+    // 初始化预设模态框 - 安全版本
     function initPresetModal() {
-      // 初始化标签页
-      document.querySelectorAll('.tab-btn-preset').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-btn-preset').forEach(b => b.classList.remove('bg-primary', 'text-white'));
-          btn.classList.add('bg-primary', 'text-white');
-          currentPresetTab = btn.dataset.tab;
-          renderPresetTab(currentPresetTab);
-          updateSelectedPresetsSummary();
-        });
-      });
-      
-      // 清空选择按钮
-      document.getElementById('clear-all-presets').addEventListener('click', () => {
-        if(confirm('确定要清空所有选择吗？')) {
-          clearAllPresets();
+      try {
+        // 确保模态框元素存在
+        const presetModal = document.getElementById('story-preset-modal');
+        if (!presetModal) return;
+        
+        // 初始化标签页
+        const tabButtons = document.querySelectorAll('.tab-btn-preset');
+        if (tabButtons.length > 0) {
+          tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+              tabButtons.forEach(b => b.classList.remove('bg-primary', 'text-white'));
+              btn.classList.add('bg-primary', 'text-white');
+              currentPresetTab = btn.dataset.tab;
+              renderPresetTab(currentPresetTab);
+              updateSelectedPresetsSummary();
+            });
+          });
+          
+          // 默认选中第一个标签
+          tabButtons[0].click();
         }
-      });
-      
-      // 底部生成故事按钮
-      document.getElementById('generate-from-presets').addEventListener('click', generateStoryFromPresets);
-      
-      // 默认选中第一个标签
-      document.querySelector('.tab-btn-preset').click();
-      
-      // 初始化总览区域
-      updateSelectedPresetsSummary();
+        
+        // 清空选择按钮
+        const clearBtn = document.getElementById('clear-all-presets');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            if(confirm('确定要清空所有选择吗？')) {
+              clearAllPresets();
+            }
+          });
+        }
+        
+        // 底部生成故事按钮
+        const generateBtn = document.getElementById('generate-from-presets');
+        if (generateBtn) {
+          generateBtn.addEventListener('click', generateStoryFromPresets);
+        }
+        
+        // 初始化总览区域
+        updateSelectedPresetsSummary();
+      } catch (error) {
+        console.error('初始化预设模态框时出错:', error);
+      }
     }
     
     // 初始化
     loadPresets();
+    loadSelectedPresets(); // 加载已保存的选中状态
     setTimeout(()=>{
       initPresetModal();
+      // 初始化后更新总览区域
+      updateSelectedPresetsSummary();
     }, 100);
 
     // --- INITIALIZATION ---
