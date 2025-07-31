@@ -1696,84 +1696,6 @@
       }
     }
     
-    // 构建故事预设字符串
-    function buildStoryPreset() {
-      let preset = "";
-      
-      // 角色设定
-      if (selectedPresets.character.length > 0) {
-        preset += "### 角色设定\n";
-        selectedPresets.character.forEach(id => {
-          const character = presetData.character.find(c => c.id === id);
-          if (character) {
-            preset += `${character.name}: ${character.desc}\n`;
-          }
-        });
-        preset += "\n";
-      }
-      
-      // 玩家人设
-      if (selectedPresets.player.length > 0) {
-        preset += "### 玩家人设\n";
-        selectedPresets.player.forEach(id => {
-          const player = presetData.player.find(p => p.id === id);
-          if (player) {
-            preset += `${player.name}: ${player.desc}\n`;
-          }
-        });
-        preset += "\n";
-      }
-      
-      // 世界观设定
-      if (selectedPresets.world.length > 0) {
-        preset += "### 世界观设定\n";
-        selectedPresets.world.forEach(id => {
-          const world = presetData.world.find(w => w.id === id);
-          if (world) {
-            preset += `${world.name}: ${world.desc}\n`;
-          }
-        });
-        preset += "\n";
-      }
-      
-      // 文风设定
-      if (selectedPresets.style.length > 0) {
-        preset += "### 文风设定\n";
-        selectedPresets.style.forEach(id => {
-          const style = presetData.style.find(s => s.id === id);
-          if (style) {
-            preset += `${style.name}: ${style.desc}\n`;
-          }
-        });
-        preset += "\n";
-      }
-      
-      // 剧本设定
-      if (selectedPresets.script.length > 0) {
-        preset += "### 剧本设定\n";
-        selectedPresets.script.forEach(id => {
-          const script = presetData.script.find(s => s.id === id);
-          if (script) {
-            preset += `${script.name}: ${script.desc}\n`;
-          }
-        });
-        preset += "\n";
-      }
-      
-      // 内容格式
-      if (selectedPresets.format.length > 0) {
-        preset += "### 内容格式\n";
-        selectedPresets.format.forEach(id => {
-          const format = presetData.format.find(f => f.id === id);
-          if (format) {
-            preset += `${format.name}: ${format.desc}\n`;
-          }
-        });
-      }
-      
-      return preset;
-    }
-
     // 根据选择的预设生成prompt
     function generatePromptFromPresets() {
       let prompt = "请根据以下设定创作一个引人入胜的故事：\n\n";
@@ -1870,77 +1792,14 @@
         savePresets(); renderPresetTab(tab); modal.remove();
       };
     }
-    // 保存所有预设选择
-    function savePresetSelections() {
-      const selections = {
-        character: selectedPresets.character,
-        player: selectedPresets.player,
-        world: selectedPresets.world,
-        style: selectedPresets.style,
-        script: selectedPresets.script,
-        format: selectedPresets.format,
-        currentTab: document.querySelector('.tab-btn-preset.bg-primary')?.dataset.tab
-      };
-      localStorage.setItem('presetSelections', JSON.stringify(selections));
-    }
-
-    // 加载预设选择
-    function loadPresetSelections() {
-      const saved = localStorage.getItem('presetSelections');
-      if (saved) {
-        const selections = JSON.parse(saved);
-        if (selections.currentTab) {
-          const tabBtn = document.querySelector(`.tab-btn-preset[data-tab="${selections.currentTab}"]`);
-          if (tabBtn) tabBtn.click();
-        }
-        
-        // 恢复所有选中的预设
-        if (selections.character) selectedPresets.character = selections.character;
-        if (selections.player) selectedPresets.player = selections.player;
-        if (selections.world) selectedPresets.world = selections.world;
-        if (selections.style) selectedPresets.style = selections.style;
-        if (selections.script) selectedPresets.script = selections.script;
-        if (selections.format) selectedPresets.format = selections.format;
-        
-        // 更新UI
-        updateSelectedPresetsSummary();
-        
-        // 重新渲染当前标签页以更新选中状态
-        const currentTab = document.querySelector('.tab-btn-preset.bg-primary')?.dataset.tab;
-        if (currentTab) {
-          renderPresetTab(currentTab);
-        }
-        
-        return selections;
-      }
-      return null;
-    }
-
     // tab切换
     document.querySelectorAll('.tab-btn-preset').forEach(btn=>{
       btn.onclick = function(){
         document.querySelectorAll('.tab-btn-preset').forEach(b=>b.classList.remove('bg-primary','text-white'));
         this.classList.add('bg-primary','text-white');
         renderPresetTab(this.dataset.tab);
-        savePresetSelections();
       };
     });
-
-    // 清空所有选择
-    function clearAllPresets() {
-      for(const tab in selectedPresets) {
-        selectedPresets[tab] = [];
-      }
-      
-      // 更新当前标签页
-      renderPresetTab(currentPresetTab);
-      
-      // 更新总览区域
-      updateSelectedPresetsSummary();
-      
-      // 保存选择状态
-      savePresetSelections();
-    }
     // 当前预设标签页
     let currentPresetTab = 'character';
     
@@ -1989,30 +1848,16 @@
             elements.themeToggle.querySelector('i').classList.replace('fa-moon-o', 'fa-sun-o');
         }
         
-        // 先加载状态
         loadState();
-        
-        parseApiKeys();
+        parseApiKeys(); // Initialize key list on load
         const currentKey = getCurrentApiKey();
         if (currentKey) {
-            elements.apiKey.value = currentKey;
+            elements.apiKey.value = currentKey; // Set the first key in the input field
         }
 
-        loadPresetSelections();
-
-        // 确保story数组是有效的
-        if (!Array.isArray(story)) {
-            story = [];
-        }
-
-        // 如果加载成功且有内容，才渲染
         if (story.length > 0) {
-            currentChapterIndex = Math.min(currentChapterIndex, story.length - 1);
-            currentChapterIndex = Math.max(currentChapterIndex, 0);
-            console.log('准备渲染章节:', currentChapterIndex);
             renderChapter(currentChapterIndex);
         } else {
-            console.log('渲染欢迎消息');
             renderWelcomeMessage();
         }
     };
