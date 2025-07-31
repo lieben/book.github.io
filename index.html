@@ -973,8 +973,20 @@
 
         try {
             const contextMemory = parseInt(elements.contextMemorySlider.value, 10);
-            const storyPreset = elements.presetText.value;
-            const formatInstructions = elements.formatPrompt.value;
+            // 生成动态storyPreset，包含所有选中预设信息
+            let storyPreset = elements.presetText.value;
+            const dynamicPreset = generatePromptFromPresets();
+            if (dynamicPreset && dynamicPreset !== "请根据以下设定创作一个引人入胜的故事：\n\n请创作第一章的内容，确保故事情节连贯，人物形象鲜明，符合上述设定要求。") {
+                storyPreset = dynamicPreset;
+            }
+            // 优先使用预设中的格式指令，没有则使用默认
+            let formatInstructions = "";
+            const formatPresets = presetData.format.filter(f => selectedPresets.format.includes(f.id));
+            if (formatPresets.length > 0) {
+                formatInstructions = formatPresets.map(p => p.desc).join("\n");
+            } else {
+                formatInstructions = elements.formatPrompt.value; // 默认后备
+            }
             const apiType = elements.apiType.value;
             const modelId = elements.modelSelect.value;
             let systemPrompt, messages, payload, endpoint, headers;
@@ -1323,7 +1335,7 @@
         {
           id: 'default-markdown',
           name: 'markdown格式',
-          desc: '使用markdown格式编写，包含H1章节标题',
+          desc: '使用markdown格式编写，章节标题使用H1',
           default: true
         }
       ],
@@ -1771,7 +1783,7 @@
         prompt += "\n";
       }
       
-      prompt += "请创作第一章的内容，确保故事情节连贯，人物形象鲜明，符合上述设定要求。";
+      prompt += "请开始小说创作，确保故事情节连贯，人物形象鲜明，符合上述设定全部要求。";
       
       return prompt;
     }
