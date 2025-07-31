@@ -1989,19 +1989,30 @@
             elements.themeToggle.querySelector('i').classList.replace('fa-moon-o', 'fa-sun-o');
         }
         
+        // 先加载状态
         loadState();
-        parseApiKeys(); // Initialize key list on load
+        
+        parseApiKeys();
         const currentKey = getCurrentApiKey();
         if (currentKey) {
-            elements.apiKey.value = currentKey; // Set the first key in the input field
+            elements.apiKey.value = currentKey;
         }
 
-        // 加载保存的预设选择
         loadPresetSelections();
 
+        // 确保story数组是有效的
+        if (!Array.isArray(story)) {
+            story = [];
+        }
+
+        // 如果加载成功且有内容，才渲染
         if (story.length > 0) {
+            currentChapterIndex = Math.min(currentChapterIndex, story.length - 1);
+            currentChapterIndex = Math.max(currentChapterIndex, 0);
+            console.log('准备渲染章节:', currentChapterIndex);
             renderChapter(currentChapterIndex);
         } else {
+            console.log('渲染欢迎消息');
             renderWelcomeMessage();
         }
     };
