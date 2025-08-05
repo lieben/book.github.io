@@ -201,7 +201,83 @@
         const loadGithubConfig = () => { const raw = localStorage.getItem(LS_KEYS.GITHUB); if (raw) { try { const saved = JSON.parse(raw); githubConfig = { ...githubConfig, ...saved, pat: atob(saved.pat || '') }; elements.githubUserInput.value = githubConfig.user; elements.githubRepoInput.value = githubConfig.repo; elements.githubPatInput.value = githubConfig.pat; elements.githubAutoSyncToggle.checked = githubConfig.autoSyncEnabled; elements.githubAutoSyncInterval.value = githubConfig.autoSyncInterval; } catch(e) { console.error("Failed to load GitHub config", e); } }};
         const getNextApiKey = () => { const type = apiConfig.type; const keysForType = apiConfig.keys[type]; if (!apiConfig.isConnected || !keysForType || !keysForType.length) return null; let keyIndex = apiConfig.currentKeyIndices[type]; const key = keysForType[keyIndex]; apiConfig.currentKeyIndices[type] = (keyIndex + 1) % keysForType.length; saveState(); return key; };
         const fetchFromApi = async (endpoint, options) => { const response = await fetch(endpoint, options); if (!response.ok) { const errorData = await response.json().catch(() => ({})); throw new Error(errorData?.error?.message || `HTTP Error: ${response.status} ${response.statusText}`); } return response.json(); };
-        const connectToApi = async () => { const type = apiConfig.type; const url = (apiConfig.urls[type] || '').trim().replace(/\/$/, ''); const keysInput = elements.apiKeyInput.value.trim(); if (!url || !keysInput) return updateApiStatus('Base URL 和 API Key 不能为空。', 'error'); const keys = keysInput.split(/[\s,]+/).filter(Boolean); if (!keys.length) return updateApiStatus('请输入一个有效的 API Key。', 'error'); updateApiStatus('正在连接...', 'loading'); try { const testKey = keys[0]; let modelsUrl, headers; if (type === 'openai') { modelsUrl = `${url}/models`; headers = { 'Authorization': `Bearer ${testKey}` }; } else { modelsUrl = `${url}/v1beta/models?key=${testKey}`; headers = {}; } const data = await fetchFromApi(modelsUrl, { headers }); const apiModels = (type === 'openai' ? data.data : data.models) || []; const modelList = []; elements.modelSelect.innerHTML = ''; apiModels.forEach(model => { const modelId = model.id || model.name; if (!modelId) return; const finalId = modelId.startsWith('models/') ? modelId.substring(7) : modelId; modelList.push(finalId); elements.modelSelect.add(new Option(finalId, finalId)); }); if (elements.modelSelect.options.length > 0) { elements.modelSelect.disabled = false; const lastModel = localStorage.getItem('aiNovelLastModel'); if (lastModel && modelList.includes(lastModel)) { elements.modelSelect.value = lastModel; } else { elements.modelSelect.selectedIndex = 0; } apiConfig.keys[type] = keys; apiConfig.currentKeyIndices[type] = 0; apiConfig.isConnected = true; apiConfig.models = modelList; const successMessage = `连接成功！发现 ${modelList.length} 个模型。${keys.length > 1 ? `已配置 ${keys.length} 个Key进行轮换。` : ''}`; updateApiStatus(successMessage, 'success'); renderApiKeyDisplay(); saveState(); } else { throw new Error("未找到兼容的模型。"); }} catch (error) { apiConfig.isConnected = false; apiConfig.models = []; saveState(); elements.modelSelect.disabled = true; elements.modelSelect.innerHTML = '<option value="">连接失败</option>'; updateApiStatus(`连接失败: ${error.message}`, 'error'); }};
+        
+        const connectToApi = async () => {
+            const type = apiConfig.type;
+            const url = (apiConfig.urls[type] || '').trim().replace(/\/$/, '');
+            
+            // Determine which keys to use for the connection attempt.
+            // 1. Prioritize new keys from the visible input box (for initial entry or edits).
+            // 2. Fall back to keys already saved in the state for the current API type.
+            let keysToTest = [];
+            const keysInputFromUI = elements.apiKeyInput.value.trim();
+            if (!elements.apiKeyInput.classList.contains('hidden') && keysInputFromUI) {
+                keysToTest = keysInputFromUI.split(/[\s,]+/).filter(Boolean);
+            } else {
+                keysToTest = apiConfig.keys[type] || [];
+            }
+
+            if (!url || keysToTest.length === 0) {
+                return updateApiStatus('Base URL 和 API Key 不能为空。', 'error');
+            }
+            
+            updateApiStatus('正在连接...', 'loading');
+            try {
+                const testKey = keysToTest[0];
+                let modelsUrl, headers;
+
+                if (type === 'openai') {
+                    modelsUrl = `${url}/models`;
+                    headers = { 'Authorization': `Bearer ${testKey}` };
+                } else { // 'gemini'
+                    modelsUrl = `${url}/v1beta/models?key=${testKey}`;
+                    headers = {};
+                }
+                
+                const data = await fetchFromApi(modelsUrl, { headers });
+                const apiModels = (type === 'openai' ? data.data : data.models) || [];
+                const modelList = [];
+                elements.modelSelect.innerHTML = '';
+                apiModels.forEach(model => {
+                    const modelId = model.id || model.name;
+                    if (!modelId) return;
+                    const finalId = modelId.startsWith('models/') ? modelId.substring(7) : modelId;
+                    modelList.push(finalId);
+                    elements.modelSelect.add(new Option(finalId, finalId));
+                });
+
+                if (modelList.length > 0) {
+                    elements.modelSelect.disabled = false;
+                    const lastModel = localStorage.getItem('aiNovelLastModel');
+                    if (lastModel && modelList.includes(lastModel)) {
+                        elements.modelSelect.value = lastModel;
+                    } else {
+                        elements.modelSelect.selectedIndex = 0;
+                    }
+                    
+                    // On successful connection, update the state with the validated keys.
+                    apiConfig.keys[type] = keysToTest;
+                    apiConfig.currentKeyIndices[type] = 0;
+                    apiConfig.isConnected = true;
+                    apiConfig.models = modelList;
+                    
+                    const successMessage = `连接成功！发现 ${modelList.length} 个模型。${keysToTest.length > 1 ? `已配置 ${keysToTest.length} 个Key进行轮换。` : ''}`;
+                    updateApiStatus(successMessage, 'success');
+                    renderApiKeyDisplay(); // This will now show the masked keys and hide the input.
+                    saveState();
+                } else {
+                    throw new Error("未找到兼容的模型。");
+                }
+            } catch (error) {
+                apiConfig.isConnected = false;
+                apiConfig.models = [];
+                saveState(); // Persist the failed connection state
+                elements.modelSelect.disabled = true;
+                elements.modelSelect.innerHTML = '<option value="">连接失败</option>';
+                updateApiStatus(`连接失败: ${error.message}`, 'error');
+            }
+        };
+
         const generateChapter = async (userPrompt, isRegeneration = false, imageBase64 = null) => { if (!apiConfig.isConnected) return alert('请先在模型设置中连接API。'); const apiKey = getNextApiKey(); if (!apiKey) { toggleLoading(false); return alert('API已连接，但未配置密钥。请重新配置。'); } toggleLoading(true); const contextMemory = parseInt(elements.contextMemorySlider.value, 10), temperature = parseFloat(elements.temperatureSlider.value), model = elements.modelSelect.value; const promptData = buildFullPrompt(userPrompt, contextMemory, isRegeneration, imageBase64); let endpoint, payload, headers; const baseUrl = (apiConfig.urls[apiConfig.type] || '').trim().replace(/\/$/, ''); if (apiConfig.type === 'openai') { endpoint = `${baseUrl}/chat/completions`; payload = { model, temperature, messages: promptData.messages, max_tokens: 8192 }; headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }; } else { endpoint = `${baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`; payload = { generationConfig: { temperature, maxOutputTokens: 8192 }, contents: promptData.geminiContents }; headers = { 'Content-Type': 'application/json' }; } try { const data = await fetchFromApi(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) }); const newContent = (apiConfig.type === 'openai' ? data.choices?.[0]?.message?.content : data.candidates?.[0]?.content?.parts?.[0]?.text)?.trim(); if (!newContent) throw new Error('API返回内容为空。'); if (isRegeneration) { story[currentChapterIndex].content = newContent; story[currentChapterIndex].customPrompt = userPrompt; story[currentChapterIndex].promptImage = imageBase64; } else { const newIndex = story.length; story.push({ title: `第 ${newIndex + 1} 章`, content: newContent, customPrompt: userPrompt, promptImage: imageBase64 }); currentChapterIndex = newIndex; } renderChapter(currentChapterIndex); } catch (error) { console.error('生成失败:', error); alert(`生成失败: ${error.message}`); toggleLoading(false); }};
         
         const buildFullPrompt = (userPrompt, contextMemory, isRegeneration, imageBase64) => {
